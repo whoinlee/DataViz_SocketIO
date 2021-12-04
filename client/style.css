@@ -115,8 +115,9 @@ h1 {
 
 .ticker-info .block {
   position: absolute;
+  top: 4px;
   width: 8px;
-  height: 56px;
+  height: 52px;
   /* background-color: var(--aapl-color); */
 }
 
@@ -193,7 +194,3 @@ h1 {
   stroke: var(--vline-color);
   shape-rendering: crispEdges;
 }
-
-/* .grid path {
-  stroke-width: 0;
-} */

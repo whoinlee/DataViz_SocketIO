@@ -148,7 +148,7 @@ function buildChart1(dataByTicker) {
       .data(yScale.ticks(5))
       .join("line")
       .attr("x1", 0) /* margin.left(yaxis loc) - margin.left) */
-      .attr("x2", width - margin.right + 50)
+      .attr("x2", width - margin.right + 54)
       .attr("y1", (d) => yScale(d))
       .attr("y2", (d) => yScale(d));
   let xGridG = svg
@@ -189,7 +189,7 @@ function buildChart1(dataByTicker) {
     .attr("class", "yAxis")
     .attr(
       "transform",
-      `translate(${margin.left + innerWidth}, ${margin.top - 10})`
+      `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
     );
   yAxis
     .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
@@ -225,9 +225,6 @@ function buildChart1(dataByTicker) {
   }
 
   function updateChart(index) {
-    // xScale = d3.domain(d3.extent(selectedData, xValue));
-    // yScale = d3.domain(d3.extent(selectedData, yValue));
-
     xScale = d3
       .scaleUtc()
       .domain(d3.extent(selectedData, xValue))
