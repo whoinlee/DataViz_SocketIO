@@ -145,7 +145,7 @@ function buildChart1(dataByTicker) {
     g
       .attr("class", "hline")
       .selectAll("line")
-      .data(yScale.ticks(4))
+      .data(yScale.ticks(5))
       .join("line")
       .attr("x1", 0) /* margin.left(yaxis loc) - margin.left) */
       .attr("x2", width - margin.right + 50)
@@ -170,7 +170,7 @@ function buildChart1(dataByTicker) {
       `translate(${margin.left}, ${height - margin.top + 10})`
     );
   xAxisB
-    .call(d3.axisBottom(xScale).ticks(10))
+    .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
     .call((g) => g.select(".domain").remove());
 
   let xAxisT = svg
@@ -179,7 +179,7 @@ function buildChart1(dataByTicker) {
     .attr("class", "xAxis")
     .attr("transform", `translate(${margin.left}, ${margin.top - 10})`);
   xAxisT
-    .call(d3.axisTop(xScale).ticks(10))
+    .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
     .call((g) => g.select(".domain").remove());
 
   //-- add Y axis
@@ -192,7 +192,7 @@ function buildChart1(dataByTicker) {
       `translate(${margin.left + innerWidth}, ${margin.top - 10})`
     );
   yAxis
-    .call(d3.axisRight(yScale).ticks(4).tickFormat(d3.format(".2f")))
+    .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
     .call((g) => g.select(".domain").remove());
 
   //-- draw a line
@@ -248,7 +248,7 @@ function buildChart1(dataByTicker) {
       .call((g) => g.select(".domain").remove());
 
     yAxis
-      .call(d3.axisRight(yScale).ticks(4).tickFormat(d3.format(".2f")))
+      .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
       .call((g) => g.select(".domain").remove());
 
     line
