@@ -108,101 +108,116 @@ function buildChart1(data) {
   let selectedTicker = tickers[selectedIndex];
   let selectedColor = colors[selectedIndex];
   let selectedData = dataByTicker.get(tickers[selectedIndex]);
-  initChart();
-  updateChart(selectedIndex);
-  updateInfo(selectedIndex);
 
-  function initChart() {}
+  console.log("selectedColor, ", selectedColor);
+
+  //-----------------------------//
+  //-------- init chart ---------//
+  //-----------------------------//
+  //-- set ranges
+  let xScale = d3
+    .scaleUtc()
+    .domain(d3.extent(selectedData, xValue))
+    .range([0, innerWidth]);
+  let yScale = d3
+    .scaleLinear()
+    .domain(d3.extent(selectedData, yValue))
+    .range([innerHeight, 0]);
+
+  //-- set grids
+  let xGrid = (g) =>
+    g
+      .attr("class", "vline")
+      .selectAll("line")
+      .data(xScale.ticks())
+      .join("line")
+      .attr("x1", (d) => xScale(d))
+      .attr("x2", (d) => xScale(d))
+      .attr("y1", margin.top - 20) /*margin.top*/
+      .attr("y2", height - margin.bottom + 20); /*margin.bottom*/
+  let yGrid = (g) =>
+    g
+      .attr("class", "hline")
+      .selectAll("line")
+      .data(yScale.ticks(4))
+      .join("line")
+      .attr("x1", 0) /* margin.left(yaxis loc) - margin.left) */
+      .attr("x2", width - margin.right + 50)
+      .attr("y1", (d) => yScale(d))
+      .attr("y2", (d) => yScale(d));
+  svg.append("g").attr("transform", `translate(${margin.left}, 0)`).call(xGrid);
+  svg.append("g").attr("transform", `translate(0, ${margin.top})`).call(yGrid);
+
+  //-- add X axis
+  let xAxis = svg
+    .append("g")
+    .attr("id", "xAxis")
+    .attr("transform", `translate(${margin.left}, ${height - margin.top})`)
+    .call(d3.axisBottom(xScale));
+  // .innerTickSize(0);
+
+  //-- add Y axis
+  svg
+    .append("g")
+    .attr("id", "yAxis")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    .call(d3.axisLeft(yScale));
+  // .outerTickSize(0);
+
+  //-- draw a line
+  let line = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    .append("path")
+    .datum(selectedData)
+    .attr(
+      "d",
+      d3
+        .line()
+        .x((d) => xScale(d.timestamp))
+        .y((d) => yScale(d.price))
+    )
+    .attr("stroke", selectedColor)
+    .style("stroke-width", 2)
+    .style("fill", "none");
+
   function updateChart(index) {
-    console.log("drawChart???, " + index);
-    console.log("drawChart???, selectedData? " + selectedData);
+    // console.log("updateChart???, " + index);
+    // console.log("updateChart???, selectedData? " + selectedData);
+    console.log("updateChart???, selectedColor? " + selectedColor);
+    console.log("updateChart???, selectedTicker? " + selectedTicker);
 
-    //-- set ranges
-    const x = d3
-      .scaleUtc()
-      .domain(d3.extent(selectedData, xValue))
-      .range([0, innerWidth]);
-    // .nice();
-    const xScale = x;
-
-    const y = d3
-      .scaleLinear()
-      .domain(d3.extent(selectedData, yValue))
-      .range([innerHeight, 0]);
-    // .nice();
-    const yScale = y;
-
-    const xGrid = (g) =>
-      g
-        .attr("class", "vline")
-        .selectAll("line")
-        .data(xScale.ticks())
-        .join("line")
-        .attr("x1", (d) => xScale(d))
-        .attr("x2", (d) => xScale(d))
-        .attr("y1", margin.top - 20) /*margin.top*/
-        .attr("y2", height - margin.bottom + 20); /*margin.bottom*/
-
-    const yGrid = (g) =>
-      g
-        .attr("class", "hline")
-        .selectAll("line")
-        .data(yScale.ticks(4))
-        .join("line")
-        .attr("x1", 0) /* margin.left(yaxis loc) - margin.left) */
-        .attr("x2", width - margin.right + 50)
-        .attr("y1", (d) => yScale(d))
-        .attr("y2", (d) => yScale(d));
-
-    //-- add the X gridlines, v-lines to the x-direction
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, 0)`)
-      .call(xGrid);
-
-    //-- add the Y gridlines, h-lines to the y-direction
-    svg
-      .append("g")
-      .attr("transform", `translate(0, ${margin.top})`)
-      .call(yGrid);
-
-    //-- add X axis
-    svg
-      .append("g")
-      .attr("id", "xAxis")
-      .attr("transform", `translate(${margin.left}, ${height - margin.top})`)
-      .call(d3.axisBottom(xScale));
-    // .innerTickSize(0);
-
-    //-- add Y axis
-    svg
-      .append("g")
-      .attr("id", "yAxis")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      .call(d3.axisLeft(yScale));
-    // .outerTickSize(0);
-
-    //-- initialize line with group a
-    let line = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      .append("path")
+    //-- update
+    xScale.domain(d3.extent(selectedData, xValue));
+    yScale.domain(d3.extent(selectedData, yValue));
+    line
       .datum(selectedData)
+      .attr("stroke", selectedColor)
       .attr(
         "d",
         d3
           .line()
           .x((d) => xScale(d.timestamp))
           .y((d) => yScale(d.price))
-      )
-      .attr("stroke", selectedColor)
-      .style("stroke-width", 2)
-      .style("fill", "none");
+      );
   }
 
   function updateInfo(index) {
-    console.log("updateInfo???, " + index);
-    console.log("updateInfo???, selectedData? " + selectedData);
+    console.log("updateInfo, index ??? " + index);
+    console.log("updateInfo???, selectedColor? " + selectedColor);
+    console.log("updateInfo???, selectedTicker? " + selectedTicker);
+
+    const prevTickerClass = selectedTicker.toLowerCase();
+    selectedTicker = tickers[index];
+    const currTickerClass = selectedTicker.toLowerCase();
+    //
+    const tickerInfo = chartDiv1.querySelector(".ticker-info");
+    const tickerBlock = chartDiv1.querySelector(".block");
+    tickerInfo.classList.remove(prevTickerClass);
+    tickerBlock.classList.remove(prevTickerClass);
+    tickerInfo.classList.add(currTickerClass);
+    tickerBlock.classList.add(currTickerClass);
+
     var firstPrice = selectedData[0].price;
     var lastPrice = selectedData[selectedData.length - 1].price;
     var priceChange = Math.round((lastPrice - firstPrice) * 100) / 100;
@@ -227,20 +242,12 @@ function buildChart1(data) {
 
   //-- a function that update the chart
   function update(index) {
+    selectedIndex = index;
     selectedData = dataByTicker.get(tickers[index]);
     selectedTicker = tickers[index];
     selectedColor = colors[index];
-
-    const prevTickerClass = selectedTicker.toLowerCase();
-    selectedTicker = tickers[index];
-    const currTickerClass = selectedTicker.toLowerCase();
-    //
-    const tickerInfo = chartDiv1.querySelector(".ticker-info");
-    const tickerBlock = chartDiv1.querySelector(".block");
-    tickerInfo.classList.remove(prevTickerClass);
-    tickerBlock.classList.remove(prevTickerClass);
-    tickerInfo.classList.add(currTickerClass);
-    tickerBlock.classList.add(currTickerClass);
+    console.log("\n---------------------");
+    console.log("update, selectedColor?, ", selectedColor);
 
     updateChart(index);
     updateInfo(index);
@@ -248,8 +255,7 @@ function buildChart1(data) {
 
   //-- when the button is changed, run the update function
   d3.select("#tickerSelection").on("change", (e) => {
-    selectedIndex = e.target.selectedIndex;
-    update(selectedIndex);
+    update(e.target.selectedIndex);
   });
 }
 
