@@ -134,7 +134,7 @@ function buildChart1(dataByTicker) {
     g
       .attr("class", "vline")
       .selectAll("line")
-      // .data(xScale.ticks(6)) //6?
+      // .data(xScale.ticks(10))
       .data(xScale.ticks())
       .join("line")
       .attr("x1", (d) => xScale(d))
@@ -151,26 +151,35 @@ function buildChart1(dataByTicker) {
       .attr("x2", width - margin.right + 50)
       .attr("y1", (d) => yScale(d))
       .attr("y2", (d) => yScale(d));
-  svg.append("g").attr("transform", `translate(${margin.left}, 0)`).call(xGrid);
-  svg.append("g").attr("transform", `translate(0, ${margin.top})`).call(yGrid);
+  let xGridG = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(xGrid);
+  let yGridG = svg
+    .append("g")
+    .attr("transform", `translate(0, ${margin.top})`)
+    .call(yGrid);
 
   //-- add X axis
-  let xAxisBottom = svg
+  let xAxisB = svg
     .append("g")
     .attr("id", "xAxisB")
     .attr("class", "xAxis")
-    .attr("transform", `translate(${margin.left}, ${height - margin.top + 10})`)
-    // .call(d3.axisBottom(xScale).ticks(6))
-    .call(d3.axisBottom(xScale))
+    .attr(
+      "transform",
+      `translate(${margin.left}, ${height - margin.top + 10})`
+    );
+  xAxisB
+    .call(d3.axisBottom(xScale).ticks(9))
     .call((g) => g.select(".domain").remove());
 
-  let xAxisTop = svg
+  let xAxisT = svg
     .append("g")
     .attr("id", "xAxisT")
     .attr("class", "xAxis")
-    .attr("transform", `translate(${margin.left}, ${margin.top - 10})`)
-    // .call(d3.axisTop(xScale).ticks(6))
-    .call(d3.axisTop(xScale))
+    .attr("transform", `translate(${margin.left}, ${margin.top - 10})`);
+  xAxisT
+    .call(d3.axisTop(xScale).ticks(9))
     .call((g) => g.select(".domain").remove());
 
   //-- add Y axis
@@ -181,7 +190,8 @@ function buildChart1(dataByTicker) {
     .attr(
       "transform",
       `translate(${margin.left + innerWidth}, ${margin.top - 10})`
-    )
+    );
+  yAxis
     .call(d3.axisRight(yScale).ticks(4))
     .call((g) => g.select(".domain").remove());
 
@@ -215,8 +225,32 @@ function buildChart1(dataByTicker) {
   }
 
   function updateChart(index) {
-    xScale.domain(d3.extent(selectedData, xValue));
-    yScale.domain(d3.extent(selectedData, yValue));
+    // xScale = d3.domain(d3.extent(selectedData, xValue));
+    // yScale = d3.domain(d3.extent(selectedData, yValue));
+
+    xScale = d3
+      .scaleUtc()
+      .domain(d3.extent(selectedData, xValue))
+      .range([0, innerWidth]);
+    yScale = d3
+      .scaleLinear()
+      .domain(d3.extent(selectedData, yValue))
+      .range([innerHeight, 0]);
+
+    xGridG.call(xGrid);
+    yGridG.call(yGrid);
+
+    xAxisB
+      .call(d3.axisBottom(xScale).ticks(9))
+      .call((g) => g.select(".domain").remove());
+    xAxisT
+      .call(d3.axisTop(xScale).ticks(9))
+      .call((g) => g.select(".domain").remove());
+
+    yAxis
+      .call(d3.axisRight(yScale).ticks(4))
+      .call((g) => g.select(".domain").remove());
+
     line
       .datum(selectedData)
       .transition()
