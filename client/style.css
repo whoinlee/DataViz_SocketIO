@@ -2,8 +2,8 @@
 
 :root {
   /* change colors */
-  --up-color: #2ca02c;
-  --down-color: #d62728;
+  /* --up-color: #2ca02c;
+  --down-color: #d62728; */
   /* categorical colors */
   /* --aapl-color: #1f77b4;
   --fb-color: #ff7f02;
@@ -195,13 +195,13 @@ h1 {
   /* color: var(--up-color); */
 }
 
-.change-info.up {
+/* .change-info.up {
   color: var(--up-color);
 }
 
 .change-info.down {
   color: var(--down-color);
-}
+} */
 
 .change-info .percent {
   position: absolute;
@@ -221,7 +221,7 @@ h1 {
   font-weight: var(--regular);
 }
 
-/* testing */
+/* testing
 .svg {
   background-color: #efefef;
 }
@@ -232,7 +232,7 @@ h1 {
 
 .svg2 {
   background-color: #aaa;
-}
+} */
 
 /* axis */
 #xAxis {

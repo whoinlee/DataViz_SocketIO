@@ -26,7 +26,7 @@ const formatTime = utcFormat("%H:%M");
 const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
 const colors = ["#1f77b4", "#9467bd", "#ff7f02", "#8c564b"];
 const upColor = "#2ca02c";
-const downColor = "#2ca02c";
+const downColor = "#d62728";
 
 //-- load historical data
 const col = (d) => {
@@ -65,14 +65,14 @@ function buildChart1(data) {
   chartDiv1.innerHTML = `
     <div class="chartHolder" id="chartHolder1"></div>
     <div class="indicationHolder" id="indicationHolder1">
-      <div class="ticker-info aapl">
-        <div class="block aapl"></div>
+      <div class="ticker-info">
+        <div class="block"></div>
         <div class="category">
             <div class="ticker">AAPL</div>
             <div class="price">$123.67</div>
         </div>
       </div>
-      <div class="change-info up">
+      <div class="change-info">
         <div class="percent">+0.86<span>%</span></div>
         <div class="value">+$1.05</div>
       </div>
@@ -82,6 +82,7 @@ function buildChart1(data) {
   indicationHolder1 = document.getElementById("indicationHolder1");
   let tickerInfo = chartDiv1.querySelector(".ticker-info");
   let tickerBlock = chartDiv1.querySelector(".ticker-info .block");
+  let changeInfo = chartDiv1.querySelector(".change-info");
 
   tickerSelection = chartDiv1.appendChild(document.createElement("select"));
   tickerSelection.setAttribute("id", "tickerSelection");
@@ -187,6 +188,8 @@ function buildChart1(data) {
     .style("stroke-width", 2)
     .style("fill", "none");
 
+  updateInfo(selectedIndex);
+
   function updateChart(index) {
     // console.log("updateChart???, " + index);
     // console.log("updateChart???, selectedData? " + selectedData);
@@ -213,8 +216,6 @@ function buildChart1(data) {
     console.log("updateInfo???, selectedColor? " + selectedColor);
     console.log("updateInfo???, selectedTicker? " + selectedTicker);
 
-    // const tickerInfo = chartDiv1.querySelector(".ticker-info");
-    // const tickerBlock = chartDiv1.querySelector(".ticker-info .block");
     tickerInfo.style.color = selectedColor;
     tickerBlock.style.backgroundColor = selectedColor;
 
@@ -223,14 +224,14 @@ function buildChart1(data) {
     var priceChange = Math.round((lastPrice - firstPrice) * 100) / 100;
     var percentChange = Math.round((priceChange / firstPrice) * 10000) / 100;
     var sign = priceChange == 0 ? "" : "+";
-    var changeInfo = chartDiv1.querySelector(".change-info");
     changeInfo.style.color = upColor;
-    // changeInfo.classList.remove("down");
-    // changeInfo.classList.add("up");
     if (priceChange < 0) {
       sign = "-";
       changeInfo.style.color = downColor;
     }
+    console.log("upColor?? " + upColor);
+    console.log("downColor?? " + downColor);
+    console.log("changeInfo.style.color?? " + changeInfo.style.color);
     lastPrice = Math.round(lastPrice * 100) / 100;
     chartDiv1.querySelector(".ticker").textContent = selectedTicker;
     indicationHolder1.querySelector(".price").textContent = "$" + lastPrice;
