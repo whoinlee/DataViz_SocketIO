@@ -1,14 +1,6 @@
 @import "fonts.css";
 
 :root {
-  /* change colors */
-  /* --up-color: #2ca02c;
-  --down-color: #d62728; */
-  /* categorical colors */
-  /* --aapl-color: #1f77b4;
-  --fb-color: #ff7f02;
-  --googl-color: #9467bd;
-  --msft-color: #8c564b; */
   /* chart colors */
   --vline-color: #dddddd;
   --hline-color: #888888;
@@ -150,39 +142,6 @@ h1 {
   font-weight: var(--regular);
 }
 
-/* .ticker-info.fb {
-  color: var(--fb-color);
-} */
-
-/* .block.fb {
-  background-color: var(--fb-color);
-} */
-
-/* .ticker-info.aapl {
-  color: var(--aapl-color);
-} */
-
-/* .block.aapl {
-  background-color: var(--aapl-color);
-} */
-
-/* .ticker-info.googl {
-  color: var(--googl-color);
-} */
-
-/* .block.googl {
-  background-color: var(--googl-color);
-} */
-
-/* .ticker-info.msft {
-  color: var(--msft-color);
-} */
-
-/* .block.msft {
-  background-color: var(--msft-color);
-} */
-/* .ticker-info --------- */
-
 /* .change-info --------- */
 .change-info {
   position: absolute;
@@ -192,16 +151,7 @@ h1 {
   font-weight: var(--bold);
   width: 90px;
   height: 60px;
-  /* color: var(--up-color); */
 }
-
-/* .change-info.up {
-  color: var(--up-color);
-}
-
-.change-info.down {
-  color: var(--down-color);
-} */
 
 .change-info .percent {
   position: absolute;
@@ -220,19 +170,6 @@ h1 {
   font-size: var(--secondary-font-size);
   font-weight: var(--regular);
 }
-
-/* testing
-.svg {
-  background-color: #efefef;
-}
-
-.svg1 {
-  background-color: #bbb;
-}
-
-.svg2 {
-  background-color: #aaa;
-} */
 
 /* axis */
 #xAxis {

@@ -190,17 +190,23 @@ function buildChart1(data) {
 
   updateInfo(selectedIndex);
 
-  function updateChart(index) {
-    // console.log("updateChart???, " + index);
-    // console.log("updateChart???, selectedData? " + selectedData);
-    console.log("updateChart???, selectedColor? " + selectedColor);
-    console.log("updateChart???, selectedTicker? " + selectedTicker);
+  function update(index) {
+    selectedIndex = index;
+    selectedData = dataByTicker.get(tickers[index]);
+    selectedTicker = tickers[index];
+    selectedColor = colors[index];
 
-    //-- update
+    updateChart(index);
+    updateInfo(index);
+  }
+
+  function updateChart(index) {
     xScale.domain(d3.extent(selectedData, xValue));
     yScale.domain(d3.extent(selectedData, yValue));
     line
       .datum(selectedData)
+      .transition()
+      .duration(750)
       .attr("stroke", selectedColor)
       .attr(
         "d",
@@ -212,10 +218,6 @@ function buildChart1(data) {
   }
 
   function updateInfo(index) {
-    console.log("updateInfo, index ??? " + index);
-    console.log("updateInfo???, selectedColor? " + selectedColor);
-    console.log("updateInfo???, selectedTicker? " + selectedTicker);
-
     tickerInfo.style.color = selectedColor;
     tickerBlock.style.backgroundColor = selectedColor;
 
@@ -229,9 +231,6 @@ function buildChart1(data) {
       sign = "-";
       changeInfo.style.color = downColor;
     }
-    console.log("upColor?? " + upColor);
-    console.log("downColor?? " + downColor);
-    console.log("changeInfo.style.color?? " + changeInfo.style.color);
     lastPrice = Math.round(lastPrice * 100) / 100;
     chartDiv1.querySelector(".ticker").textContent = selectedTicker;
     indicationHolder1.querySelector(".price").textContent = "$" + lastPrice;
@@ -240,19 +239,6 @@ function buildChart1(data) {
     )}<span>%</span>`;
     indicationHolder1.querySelector(".value").textContent =
       sign + "$" + Math.abs(priceChange);
-  }
-
-  //-- a function that update the chart
-  function update(index) {
-    selectedIndex = index;
-    selectedData = dataByTicker.get(tickers[index]);
-    selectedTicker = tickers[index];
-    selectedColor = colors[index];
-    console.log("\n---------------------");
-    console.log("update, selectedColor?, ", selectedColor);
-
-    updateChart(index);
-    updateInfo(index);
   }
 
   //-- when the button is changed, run the update function
