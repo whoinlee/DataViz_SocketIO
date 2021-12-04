@@ -241,10 +241,10 @@ function buildChart1(dataByTicker) {
     yGridG.call(yGrid);
 
     xAxisB
-      .call(d3.axisBottom(xScale).ticks(10))
+      .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
       .call((g) => g.select(".domain").remove());
     xAxisT
-      .call(d3.axisTop(xScale).ticks(10))
+      .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
       .call((g) => g.select(".domain").remove());
 
     yAxis

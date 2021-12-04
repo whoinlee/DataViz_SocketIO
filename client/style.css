@@ -116,7 +116,7 @@ h1 {
 .ticker-info .block {
   position: absolute;
   width: 8px;
-  height: 60px;
+  height: 56px;
   /* background-color: var(--aapl-color); */
 }
 
@@ -130,7 +130,7 @@ h1 {
 .category .ticker {
   position: absolute;
   font-weight: var(--bold);
-  top: -10px;
+  top: -6px;
   text-transform: uppercase;
 }
 
@@ -154,7 +154,7 @@ h1 {
 
 .change-info .percent {
   position: absolute;
-  top: -10px;
+  top: -6px;
   right: 16px;
 }
 
