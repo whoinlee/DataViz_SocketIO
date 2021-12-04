@@ -25,6 +25,8 @@ const formatTime = utcFormat("%H:%M");
 // const curve = d3.curveLinear;
 const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
 const colors = ["#1f77b4", "#9467bd", "#ff7f02", "#8c564b"];
+const upColor = "#2ca02c";
+const downColor = "#2ca02c";
 
 //-- load historical data
 const col = (d) => {
@@ -78,6 +80,8 @@ function buildChart1(data) {
   `;
   chartHolder1 = document.getElementById("chartHolder1");
   indicationHolder1 = document.getElementById("indicationHolder1");
+  let tickerInfo = chartDiv1.querySelector(".ticker-info");
+  let tickerBlock = chartDiv1.querySelector(".ticker-info .block");
 
   tickerSelection = chartDiv1.appendChild(document.createElement("select"));
   tickerSelection.setAttribute("id", "tickerSelection");
@@ -109,7 +113,9 @@ function buildChart1(data) {
   let selectedColor = colors[selectedIndex];
   let selectedData = dataByTicker.get(tickers[selectedIndex]);
 
-  console.log("selectedColor, ", selectedColor);
+  //-- info color
+  tickerInfo.style.color = selectedColor;
+  tickerBlock.style.backgroundColor = selectedColor;
 
   //-----------------------------//
   //-------- init chart ---------//
@@ -207,16 +213,10 @@ function buildChart1(data) {
     console.log("updateInfo???, selectedColor? " + selectedColor);
     console.log("updateInfo???, selectedTicker? " + selectedTicker);
 
-    const prevTickerClass = selectedTicker.toLowerCase();
-    selectedTicker = tickers[index];
-    const currTickerClass = selectedTicker.toLowerCase();
-    //
-    const tickerInfo = chartDiv1.querySelector(".ticker-info");
-    const tickerBlock = chartDiv1.querySelector(".block");
-    tickerInfo.classList.remove(prevTickerClass);
-    tickerBlock.classList.remove(prevTickerClass);
-    tickerInfo.classList.add(currTickerClass);
-    tickerBlock.classList.add(currTickerClass);
+    // const tickerInfo = chartDiv1.querySelector(".ticker-info");
+    // const tickerBlock = chartDiv1.querySelector(".ticker-info .block");
+    tickerInfo.style.color = selectedColor;
+    tickerBlock.style.backgroundColor = selectedColor;
 
     var firstPrice = selectedData[0].price;
     var lastPrice = selectedData[selectedData.length - 1].price;
@@ -224,11 +224,12 @@ function buildChart1(data) {
     var percentChange = Math.round((priceChange / firstPrice) * 10000) / 100;
     var sign = priceChange == 0 ? "" : "+";
     var changeInfo = chartDiv1.querySelector(".change-info");
-    changeInfo.classList.remove("down");
-    changeInfo.classList.add("up");
+    changeInfo.style.color = upColor;
+    // changeInfo.classList.remove("down");
+    // changeInfo.classList.add("up");
     if (priceChange < 0) {
       sign = "-";
-      changeInfo.classList.add("down");
+      changeInfo.style.color = downColor;
     }
     lastPrice = Math.round(lastPrice * 100) / 100;
     chartDiv1.querySelector(".ticker").textContent = selectedTicker;
@@ -254,9 +255,9 @@ function buildChart1(data) {
   }
 
   //-- when the button is changed, run the update function
-  d3.select("#tickerSelection").on("change", (e) => {
-    update(e.target.selectedIndex);
-  });
+  d3.select("#tickerSelection").on("change", (e) =>
+    update(e.target.selectedIndex)
+  );
 }
 
 function buildChart2(data) {

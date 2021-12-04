@@ -5,10 +5,10 @@
   --up-color: #2ca02c;
   --down-color: #d62728;
   /* categorical colors */
-  --aapl-color: #1f77b4;
+  /* --aapl-color: #1f77b4;
   --fb-color: #ff7f02;
   --googl-color: #9467bd;
-  --msft-color: #8c564b;
+  --msft-color: #8c564b; */
   /* chart colors */
   --vline-color: #dddddd;
   --hline-color: #888888;
@@ -119,14 +119,14 @@ h1 {
 .ticker-info {
   padding-left: 10px;
   font-size: var(--primary-font-size);
-  color: var(--aapl-color); /*temporary*/
+  /* color: var(--aapl-color);  */
 }
 
 .ticker-info .block {
   position: absolute;
   width: 8px;
   height: 60px;
-  background-color: var(--aapl-color);
+  /* background-color: var(--aapl-color); */
 }
 
 .ticker-info .category {
@@ -150,37 +150,37 @@ h1 {
   font-weight: var(--regular);
 }
 
-.ticker-info.fb {
+/* .ticker-info.fb {
   color: var(--fb-color);
-}
+} */
 
-.block.fb {
+/* .block.fb {
   background-color: var(--fb-color);
-}
+} */
 
-.ticker-info.aapl {
+/* .ticker-info.aapl {
   color: var(--aapl-color);
-}
+} */
 
-.block.aapl {
+/* .block.aapl {
   background-color: var(--aapl-color);
-}
+} */
 
-.ticker-info.googl {
+/* .ticker-info.googl {
   color: var(--googl-color);
-}
+} */
 
-.block.googl {
+/* .block.googl {
   background-color: var(--googl-color);
-}
+} */
 
-.ticker-info.msft {
+/* .ticker-info.msft {
   color: var(--msft-color);
-}
+} */
 
-.block.msft {
+/* .block.msft {
   background-color: var(--msft-color);
-}
+} */
 /* .ticker-info --------- */
 
 /* .change-info --------- */
@@ -192,7 +192,7 @@ h1 {
   font-weight: var(--bold);
   width: 90px;
   height: 60px;
-  color: var(--up-color); /*temporary*/
+  /* color: var(--up-color); */
 }
 
 .change-info.up {
