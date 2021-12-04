@@ -1,12 +1,39 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>UI Dev Challenge</title>
-  <link href="style.css" rel="stylesheet">
-</head>
-<body>
-  <h1>Hello World</h1>
-  <script src="index.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>UI Dev Challenge</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.1.1/d3.min.js"
+      integrity="sha512-COTaPOlz12cG4fSfcBsxZsjauBAyldqp+8FQUM/dZHm+ts/jR4AFoJhCqxy8K10Jrf3pojfsbq7fAPTb1XaVkg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Realtime DataViz using socket.io</h1>
+      <div id="content">
+        Loading data ...
+        <!-- 
+        <div class="chartHolder" id="chartHolder1"></div>
+          <div class="indicationHolder" id="indicationHolder1">
+            <div class="ticker-info aapl">
+              <div class="block aapl"></div>
+              <div class="category">
+                  <div class="ticker">AAPL</div>
+                  <div class="price">$123.67</div>
+              </div>
+            </div>
+            <div class="change-info up">
+              <div class="percent">+0.86<span>%</span></div>
+              <div class="value">+$1.05</div>
+            </div>
+          </div> 
+        </div> -->
+      </div>
+    </div>
+    <script type="module" src="index.js" async defer></script>
+  </body>
 </html>

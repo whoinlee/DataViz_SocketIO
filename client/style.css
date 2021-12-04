@@ -1,5 +1,267 @@
-@import 'fonts.css';
+@import "fonts.css";
+
+:root {
+  /* change colors */
+  --up-color: #2ca02c;
+  --down-color: #d62728;
+  /* categorical colors */
+  --aapl-color: #1f77b4;
+  --fb-color: #ff7f02;
+  --googl-color: #9467bd;
+  --msft-color: #8c564b;
+  /* chart colors */
+  --vline-color: #dddddd;
+  --hline-color: #888888;
+  --origin-color: #000000;
+  --primary-color: black;
+  /* font sizes */
+  --time-font-size: 0.8em; /* New Cycle, regular */
+  --percent-font-size: 24px; /* New Cycle, bold */
+  --primary-font-size: 32px; /* New Cycle, bold */
+  --secondary-font-size: 16px; /* New Cycle, regular */
+  /* font weight */
+  --bold: 700;
+  --regular: 400;
+  /* chart dimensions */
+  --chart-div-width: 1000px;
+  --chart-div-height: 700px;
+  --chart-holder-width: 750px;
+  --chart-holder-height: var(--chart-div-height);
+  --chart-indication-width: calc(
+    var(--chart-div-width) - var(--chart-holder-width)
+  ); /*250px */
+  --chart-indication-height: var(--chart-div-height);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
-  font-family: 'News Cycle', Sans-serif;
+  font-family: "News Cycle", Sans-serif;
+  font-size: 16px;
+  /* width: 100vw;
+  height: 100%; */
 }
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  font-size: 3em;
+  color: white;
+  font-weight: var(--bold);
+  background-color: black;
+  width: 100vw;
+  height: 85px;
+  text-align: center;
+}
+
+#content {
+  font-size: var(--secondary-font-size);
+  color: var(--primary-color);
+  font-weight: var(--regular);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#tickerSelection {
+  /* dropdown <select> */
+  position: absolute;
+  top: 0px;
+  /* top: 10px; */
+  left: 50px;
+}
+
+/* -- chart related -- */
+.chartDiv {
+  /*chart holders*/
+  position: relative;
+  margin-top: 50px;
+  width: var(--chart-div-width);
+  height: var(--chart-div-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* border: 1px solid green; */
+}
+
+.chartHolder {
+  position: absolute;
+  left: 0px;
+  width: var(--chart-holder-width);
+  height: 100%;
+  /* height: var(--chart-holder-height); */
+  /* background-color: #efefef; */
+  /* border: 1px solid black; */
+}
+
+.indicationHolder {
+  position: absolute;
+  left: var(--chart-holder-width);
+  width: var(--chart-indication-width);
+  height: 100%;
+  /* background-color: #eee; */
+  /* border: 1px solid purple; */
+  display: flex;
+  justify-content: space-between;
+}
+
+/* .ticker-info --------- */
+.ticker-info {
+  padding-left: 10px;
+  font-size: var(--primary-font-size);
+  color: var(--aapl-color); /*temporary*/
+}
+
+.ticker-info .block {
+  position: absolute;
+  width: 8px;
+  height: 60px;
+  background-color: var(--aapl-color);
+}
+
+.ticker-info .category {
+  position: absolute;
+  left: 23px;
+  font-weight: var(--bold);
+  height: 60px;
+}
+
+.category .ticker {
+  position: absolute;
+  font-weight: var(--bold);
+  top: -10px;
+  text-transform: uppercase;
+}
+
+.ticker-info .category .price {
+  position: absolute;
+  top: 30px;
+  font-size: var(--secondary-font-size);
+  font-weight: var(--regular);
+}
+
+.ticker-info.fb {
+  color: var(--fb-color);
+}
+
+.block.fb {
+  background-color: var(--fb-color);
+}
+
+.ticker-info.aapl {
+  color: var(--aapl-color);
+}
+
+.block.aapl {
+  background-color: var(--aapl-color);
+}
+
+.ticker-info.googl {
+  color: var(--googl-color);
+}
+
+.block.googl {
+  background-color: var(--googl-color);
+}
+
+.ticker-info.msft {
+  color: var(--msft-color);
+}
+
+.block.msft {
+  background-color: var(--msft-color);
+}
+/* .ticker-info --------- */
+
+/* .change-info --------- */
+.change-info {
+  position: absolute;
+  left: 160px;
+  padding-right: 10px;
+  font-size: var(--primary-font-size);
+  font-weight: var(--bold);
+  width: 90px;
+  height: 60px;
+  color: var(--up-color); /*temporary*/
+}
+
+.change-info.up {
+  color: var(--up-color);
+}
+
+.change-info.down {
+  color: var(--down-color);
+}
+
+.change-info .percent {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+}
+
+.change-info .percent span {
+  font-size: var(--percent-font-size);
+}
+
+.change-info .value {
+  position: absolute;
+  top: 30px;
+  right: 16px;
+  font-size: var(--secondary-font-size);
+  font-weight: var(--regular);
+}
+
+/* testing */
+.svg {
+  background-color: #efefef;
+}
+
+.svg1 {
+  background-color: #bbb;
+}
+
+.svg2 {
+  background-color: #aaa;
+}
+
+/* axis */
+#xAxis {
+  /* display: none; */
+  opacity: 0.1;
+}
+
+#yAxis {
+  /* display: none;*/
+  opacity: 0.1;
+}
+
+/* grid */
+.hline {
+  stroke: var(--hline-color);
+  stroke: #888;
+  color: #888;
+  /* stroke-opacity: 0.7; */
+  shape-rendering: crispEdges;
+}
+
+.vline {
+  stroke: var(--vline-color);
+  stroke: #ddd;
+  color: #ddd;
+  /* stroke-opacity: 0.7; */
+  shape-rendering: crispEdges;
+}
+
+/* .grid path {
+  stroke-width: 0;
+} */
