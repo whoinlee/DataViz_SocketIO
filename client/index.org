@@ -3,7 +3,7 @@ import "style.css";
 import "favicon.ico";
 import io from "socket.io-client";
 import { csv } from "d3-request";
-// import { utcDay, utcMinute } from "d3-time";
+import { utcDay, utcMinute } from "d3-time";
 import { utcFormat } from "d3-time-format";
 
 //-- dimensions
@@ -29,7 +29,7 @@ const downColor = "#d62728";
 
 //-- load historical data
 const col = (d) => {
-  d.utcTime = formatTime(d.timestamp);
+  d.utcTime = formatTime(utcMinute(d.timestamp));
   d.price = +d.price;
   return d;
 };
@@ -39,8 +39,7 @@ csv("/market-history", col, (error, data) => {
     return;
   }
   //-- {timestamp: '1638351000000', ticker: 'AAPL', price: '119.25', utcTime: '09:30'}
-  const dataByTicker = d3.group(data, (d) => d.ticker);
-  buildCharts(dataByTicker);
+  buildCharts(data);
 });
 
 //-- subscribe to updates
@@ -58,9 +57,7 @@ function buildCharts(data) {
   buildChart2(data);
 }
 
-function buildChart1(dataByTicker) {
-  console.log("index.js :: buildChart1, dataByTicker?? ", dataByTicker);
-
+function buildChart1(data) {
   chartDiv1 = contentDiv.appendChild(document.createElement("div"));
   chartDiv1.setAttribute("id", "chartDiv1");
   chartDiv1.setAttribute("class", "chartDiv");
@@ -96,6 +93,10 @@ function buildChart1(dataByTicker) {
     .text((d) => d)
     .attr("value", (d) => d);
 
+  const dataByTicker = d3.group(data, (d) => d.ticker); //-- a Map grouped by ticker
+  // console.log("index.js :: buildChart1, dataByTicker?? ", dataByTicker);
+  // const color = d3.scaleOrdinal().domain(tickers).range(colors);
+
   const svg = d3
     .select("#chartHolder1")
     .append("svg")
@@ -103,6 +104,9 @@ function buildChart1(dataByTicker) {
     .attr("height", height + margin.top + margin.bottom) /* TODO */
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const xValue = (d) => d["timestamp"];
+  const yValue = (d) => d["price"];
 
   let selectedIndex = 0;
   let selectedTicker = tickers[selectedIndex];
@@ -116,9 +120,6 @@ function buildChart1(dataByTicker) {
   //-----------------------------//
   //-------- init chart ---------//
   //-----------------------------//
-  const xValue = (d) => d["timestamp"];
-  const yValue = (d) => d["price"];
-
   //-- set ranges
   let xScale = d3
     .scaleUtc()
@@ -134,13 +135,12 @@ function buildChart1(dataByTicker) {
     g
       .attr("class", "vline")
       .selectAll("line")
-      // .data(xScale.ticks(6)) //6?
       .data(xScale.ticks())
       .join("line")
       .attr("x1", (d) => xScale(d))
       .attr("x2", (d) => xScale(d))
-      .attr("y1", margin.top - 8) /*margin.top*/
-      .attr("y2", height - margin.bottom + 8); /*margin.bottom*/
+      .attr("y1", margin.top - 20) /*margin.top*/
+      .attr("y2", height - margin.bottom + 20); /*margin.bottom*/
   let yGrid = (g) =>
     g
       .attr("class", "hline")
@@ -155,35 +155,20 @@ function buildChart1(dataByTicker) {
   svg.append("g").attr("transform", `translate(0, ${margin.top})`).call(yGrid);
 
   //-- add X axis
-  let xAxisBottom = svg
+  let xAxis = svg
     .append("g")
-    .attr("id", "xAxisB")
-    .attr("class", "xAxis")
-    .attr("transform", `translate(${margin.left}, ${height - margin.top + 10})`)
-    // .call(d3.axisBottom(xScale).ticks(6))
-    .call(d3.axisBottom(xScale))
-    .call((g) => g.select(".domain").remove());
-
-  let xAxisTop = svg
-    .append("g")
-    .attr("id", "xAxisT")
-    .attr("class", "xAxis")
-    .attr("transform", `translate(${margin.left}, ${margin.top - 10})`)
-    // .call(d3.axisTop(xScale).ticks(6))
-    .call(d3.axisTop(xScale))
-    .call((g) => g.select(".domain").remove());
+    .attr("id", "xAxis")
+    .attr("transform", `translate(${margin.left}, ${height - margin.top})`)
+    .call(d3.axisBottom(xScale));
+  // .innerTickSize(0);
 
   //-- add Y axis
-  let yAxis = svg
+  svg
     .append("g")
-    .attr("id", "yAxisR")
-    .attr("class", "yAxis")
-    .attr(
-      "transform",
-      `translate(${margin.left + innerWidth}, ${margin.top - 10})`
-    )
-    .call(d3.axisRight(yScale).ticks(4))
-    .call((g) => g.select(".domain").remove());
+    .attr("id", "yAxis")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    .call(d3.axisLeft(yScale));
+  // .outerTickSize(0);
 
   //-- draw a line
   let line = svg
@@ -261,6 +246,6 @@ function buildChart1(dataByTicker) {
   );
 }
 
-function buildChart2(dataByTicker) {
-  // console.log("index.js :: buildChart2, dataByTicker? " + dataByTicker);
+function buildChart2(data) {
+  // console.log("index.js :: buildChart2, data? " + data);
 }

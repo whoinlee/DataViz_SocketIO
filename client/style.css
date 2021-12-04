@@ -68,9 +68,8 @@ h1 {
 #tickerSelection {
   /* dropdown <select> */
   position: absolute;
-  top: 0px;
-  /* top: 10px; */
-  left: 50px;
+  top: -30px;
+  left: 20px;
 }
 
 /* -- chart related -- */
@@ -172,30 +171,26 @@ h1 {
 }
 
 /* axis */
-#xAxis {
-  /* display: none; */
-  opacity: 0.1;
+.tick line {
+  display: none;
 }
 
-#yAxis {
-  /* display: none;*/
-  opacity: 0.1;
+.xAxis .tick text {
+  font-size: 13px;
+}
+
+.yAxis .tick text {
+  font-size: 17px;
 }
 
 /* grid */
 .hline {
   stroke: var(--hline-color);
-  stroke: #888;
-  color: #888;
-  /* stroke-opacity: 0.7; */
   shape-rendering: crispEdges;
 }
 
 .vline {
   stroke: var(--vline-color);
-  stroke: #ddd;
-  color: #ddd;
-  /* stroke-opacity: 0.7; */
   shape-rendering: crispEdges;
 }
 
