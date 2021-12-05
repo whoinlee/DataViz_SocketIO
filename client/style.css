@@ -75,9 +75,10 @@ h1 {
 }
 
 .selectDiv {
+  /* margin-left: 200px; */
   /* background-color: #eee; */
-  width: var(--chart-div-width);
-  height: 50px;
+  width: 600px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +100,7 @@ h1 {
   width: var(--chart-div-width);
   height: var(--chart-div-height);
   /* background-color: #ddd; */
-  border: 1px solid black;
+  /* border: 1px solid black; */
 }
 
 .chartHolder {

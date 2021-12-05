@@ -36,7 +36,6 @@ let currChart;
 //-- data
 let dataByTicker; //map
 let selectedTickers = [];
-// let dataArr = []; //array
 
 //-- load historical data
 const col = (d) => {
@@ -143,8 +142,8 @@ function buildSelectPane() {
   tickers.map((ticker) => {
     const checkBox = document.getElementById(`${ticker}Check`);
     checkBox.addEventListener("click", (e) => {
-      console.log("e.target.value", e.target.value);
-      console.log("e.target.checked", e.target.checked);
+      // console.log("e.target.value", e.target.value);
+      // console.log("e.target.checked", e.target.checked);
       if (e.target.checked) {
         selectedTickers.push(e.target.value);
       } else {
@@ -208,8 +207,6 @@ function priceChart(pTicker = "AAPL") {
   let changeInfo = chartDiv1.querySelector(".change-info");
 
   let selectedIndex, selectedTicker, selectedColor, selectedData;
-  // selectedIndex = 0;
-  // selectedTicker = tickers[selectedIndex];
   selectedIndex = tickers.indexOf(pTicker);
   selectedTicker = pTicker;
   selectedColor = colors[selectedIndex];
@@ -320,26 +317,27 @@ function priceChart(pTicker = "AAPL") {
     .style("stroke-width", 2)
     .style("fill", "none");
 
-  //-- build ticker select drop-down
-  tickerSelection = chartDiv1.appendChild(document.createElement("select"));
-  tickerSelection.setAttribute("id", "tickerSelection");
-  d3.select("#tickerSelection")
-    .selectAll("myOptions")
-    .data(tickers)
-    .enter()
-    .append("option")
-    .text((d) => d)
-    .attr("value", (d) => d);
-
-  //-- on tickerSelection change, update chart
-  d3.select("#tickerSelection").on("change", (e) => {
-    selectedIndex = e.target.selectedIndex;
-    selectedTicker = tickers[selectedIndex];
-    selectedColor = colors[selectedIndex];
-    selectedData = dataByTicker.get(tickers[selectedIndex]);
-    updateInfo();
-    updateChart();
-  });
+  function buildTickerSelection() {
+    //-- build ticker select drop-down
+    tickerSelection = chartDiv1.appendChild(document.createElement("select"));
+    tickerSelection.setAttribute("id", "tickerSelection");
+    d3.select("#tickerSelection")
+      .selectAll("myOptions")
+      .data(tickers)
+      .enter()
+      .append("option")
+      .text((d) => d)
+      .attr("value", (d) => d);
+    //-- on tickerSelection change, update chart
+    d3.select("#tickerSelection").on("change", (e) => {
+      selectedIndex = e.target.selectedIndex;
+      selectedTicker = tickers[selectedIndex];
+      selectedColor = colors[selectedIndex];
+      selectedData = dataByTicker.get(tickers[selectedIndex]);
+      updateInfo();
+      updateChart();
+    });
+  }
 
   function hideInfo() {
     indicationHolder1.style.visibility = "hidden";
@@ -401,10 +399,11 @@ function priceChart(pTicker = "AAPL") {
       .call((g) => g.select(".domain").remove());
 
     //-- update graph line
+    // line.remove();
     line
       .datum(selectedData)
-      // .transition()
-      // .duration(500)
+      .transition()
+      .duration(500)
       .attr("stroke", selectedColor)
       .attr(
         "d",
@@ -413,7 +412,7 @@ function priceChart(pTicker = "AAPL") {
           .x((d) => xScale(d.timestamp))
           .y((d) => yScale(d.price))
       );
-    if (transition) line.transition().duration(500);
+    // if (transition) line.transition().duration(500);
   }
 
   function hideLine() {
@@ -426,25 +425,19 @@ function priceChart(pTicker = "AAPL") {
 
   priceChart.update = function () {
     console.log("priceChart.update");
-
     selectedData = dataByTicker.get(tickers[selectedIndex]);
-
-    // showInfo();
-    // showLine();
     updateInfo();
     updateChart();
   };
 
   priceChart.hide = function () {
     console.log("priceChart.hide");
-
     hideInfo();
     hideLine();
   };
 
   priceChart.redraw = function (ticker) {
     console.log("priceChart.redraw");
-
     selectedIndex = tickers.indexOf(ticker);
     selectedTicker = ticker;
     selectedColor = colors[selectedIndex];
