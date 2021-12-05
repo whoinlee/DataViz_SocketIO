@@ -60,8 +60,8 @@ csv("/market-history", col, (error, data) => {
   });
   // console.log("data loaded :: dataByTicker?? after ", dataByTicker);
 
-  pChart = priceChart();
-  // cChart = changeChart();
+  // pChart = priceChart();
+  cChart = changeChart();
 });
 
 //-- subscribe to updates
@@ -156,6 +156,9 @@ function changeChart() {
   let tickerInfos = chartDiv2.querySelectorAll(".ticker-info");
   let tickerBlocks = chartDiv2.querySelectorAll(".ticker-info .block");
   let prices = chartDiv2.querySelectorAll(".ticker-info .category .price");
+  let changeInfos = chartDiv2.querySelectorAll(".change-info");
+  let percents = chartDiv2.querySelectorAll(".change-info .percent");
+  let values = chartDiv2.querySelectorAll(".change-info .value");
 
   updateInfo();
 
@@ -164,35 +167,24 @@ function changeChart() {
     const lastIndex = dataArr[0].length - 1;
     //-- for each ticker
     tickers.map((ticker, i) => {
+      const priceChange = dataArr[i][lastIndex].priceChange;
+      const percentChange = dataArr[i][lastIndex].percentChange;
+      let sign = priceChange == 0 ? "" : "+";
+      changeInfos[i].style.color = upColor;
+      if (priceChange < 0) {
+        sign = "-";
+        changeInfos[i].style.color = downColor;
+      }
       infoHolders[i].style.top = 60 * i + "px";
       tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
         colors[i];
       prices[i].textContent =
         "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
+      percents[i].innerHTML = `${sign}${Math.abs(
+        dataArr[i][lastIndex].percentChange
+      )}`;
+      values[i].textContent = sign + "$" + Math.abs(priceChange);
     });
-
-    /*
-    //-- calculate priceChange and percentChange
-    let firstPrice = selectedData[0].price;
-    let lastPrice = selectedData[lastIndex].price;
-    let priceChange = Math.round((lastPrice - firstPrice) * 100) / 100;
-    let percentChange = selectedData[lastIndex].percentChange;
-    let sign = priceChange == 0 ? "" : "+";
-    changeInfo.style.color = upColor;
-    if (priceChange < 0) {
-      sign = "-";
-      changeInfo.style.color = downColor;
-    }
-    lastPrice = Math.round(lastPrice * 100) / 100;
-    //
-    // chartDiv1.querySelector(".ticker").textContent = selectedTicker;
-    // indicationHolder1.querySelector(".price").textContent = "$" + lastPrice;
-    indicationHolder1.querySelector(".percent").innerHTML = `${sign}${Math.abs(
-      percentChange
-    )}<span>%</span>`;
-    indicationHolder1.querySelector(".value").textContent =
-      sign + "$" + Math.abs(priceChange);
-    */
   }
 
   //-----------------------------//
