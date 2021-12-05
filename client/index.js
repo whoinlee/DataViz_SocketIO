@@ -66,37 +66,37 @@ socket.on("market events", function (data) {
       2: {ticker: 'MSFT', change: 0.0393}
     timestamp: 1638883200000
   */
+  if (data.changes.length > 0) {
+    const timestamp = data.timestamp + "";
+    const changesArr = data.changes;
+    tickers.map((currTicker) => {
+      let dataArr = dataByTicker.get(currTicker);
+      let lastPrice = dataArr[dataArr.length - 1].price;
+      let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
+      const price = newDataObj ? lastPrice + newDataObj.change : lastPrice;
+      dataArr.push({ timestamp: timestamp, ticker: currTicker, price: price });
+    });
+    console.log("dataByTicker", dataByTicker);
 
-  // if (data.changes.length > 0) {
-  //   const timestamp = data.timestamp + "";
-  //   const changesArr = data.changes;
-  //   /* const tickers = ["AAPL", "GOOGL", "FB", "MSFT"]; */
-  //   tickers.map((currTicker) => {
-  //     let dataArr = dataByTicker.get(currTicker);
-  //     let lastPrice = dataArr[dataArr.length - 1].price;
-  //     let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
-  //     const price = newDataObj ? lastPrice + newDataObj.change : lastPrice;
-  //     dataArr.push({ timestamp: timestamp, ticker: currTicker, price: price });
-  //   });
-  //   console.log("dataByTicker", dataByTicker);
-  //   // pChart.update(data);
-  //   // cChart.update(data);
-  // }
+    pChart.update();
+    // cChart.update(data);
+  }
 });
 socket.on("start new day", function (data) {
   console.log("NewDay", data);
-  //-- reset dataByTicker;
-  tickers.map((currTicker) => {
-    let dataArr = dataByTicker.get(currTicker);
-    dataArr.length = 0;
-  });
-  console.log("NewDay :: dataByTicker??? ", dataByTicker);
   /*
     {
       "timestamp": 1489483800000,
       "newDay": true
     }
   */
+  //-- reset dataByTicker;
+  tickers.map((currTicker) => {
+    let dataArr = dataByTicker.get(currTicker);
+    dataArr.length = 0;
+  });
+  console.log("NewDay :: dataByTicker??? ", dataByTicker);
+
   // pChart.reset(data);
   // cChart.reset(data);
 });
@@ -318,7 +318,7 @@ function priceChart(dataByTicker) {
     line
       .datum(selectedData)
       .transition()
-      .duration(750)
+      .duration(500)
       .attr("stroke", selectedColor)
       .attr(
         "d",
@@ -333,8 +333,11 @@ function priceChart(dataByTicker) {
     console.log("priceChart.reset called, data ??", data);
   };
 
-  priceChart.update = function (data) {
-    console.log("priceChart.update called, data ??", data);
+  priceChart.update = function () {
+    console.log("priceChart.update called, data ??", dataByTicker);
+    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    updateInfo();
+    updateChart();
   };
 
   return priceChart;
