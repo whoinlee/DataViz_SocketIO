@@ -74,11 +74,27 @@ h1 {
   left: 0px;
 }
 
+.selectDiv {
+  /* background-color: #eee; */
+  width: var(--chart-div-width);
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+}
+
+.selectDiv span {
+  padding-left: 20px;
+  padding-right: 20px;
+  font-weight: var(--bold);
+}
+
 /* -- chart related -- */
 .chartDiv {
   /*chart holders*/
   position: relative;
-  margin-top: 75px;
+  /* margin-top: 75px; */
   margin-bottom: 20px;
   width: var(--chart-div-width);
   height: var(--chart-div-height);
@@ -108,7 +124,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   /* background-color: #ddd; */
-  border: 1px solid red;
+  /* border: 1px solid red; */
 }
 
 /* .ticker-info --------- */
@@ -121,7 +137,7 @@ h1 {
   /* top: 4px; */
   width: 8px;
   height: 52px;
-  background-color: black;
+  /* background-color: black; */
 }
 
 .ticker-info .category {

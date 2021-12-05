@@ -14,10 +14,12 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 
 //-- HTML elements
 const contentDiv = document.getElementById("content");
+let selectDiv;
+let checkBoxes;
+let tickerSelection;
 let chartDiv1, chartDiv2;
 let chartHolder1, chartHolder2;
 let indicationHolder1, indicationHolder2;
-let tickerSelection;
 
 //-- time related
 const formatTime = utcFormat("%H:%M");
@@ -32,7 +34,7 @@ let cChart = {};
 
 //-- data
 let dataByTicker; //map
-let dataArr = []; //array
+// let dataArr = []; //array
 
 //-- load historical data
 const col = (d) => {
@@ -60,6 +62,7 @@ csv("/market-history", col, (error, data) => {
   });
   // console.log("data loaded :: dataByTicker?? after ", dataByTicker);
 
+  buildSelectPane();
   // pChart = priceChart();
   cChart = changeChart();
 });
@@ -121,222 +124,27 @@ socket.on("start new day", function (data) {
   // console.log("NewDay :: dataByTicker??? ", dataByTicker);
 });
 
-function changeChart() {
-  let changeChart = {};
-
-  chartDiv2 = contentDiv.appendChild(document.createElement("div"));
-  chartDiv2.setAttribute("id", "chartDiv2");
-  chartDiv2.setAttribute("class", "chartDiv");
-  chartDiv2.innerHTML = `
-    <div class="chartHolder" id="chartHolder2"></div>
-    <div class="indicationHolder" id="indicationHolder2"></div>
-  `;
-  chartHolder2 = document.getElementById("chartHolder2");
-  indicationHolder2 = document.getElementById("indicationHolder2");
-  indicationHolder2.innerHTML = tickers
+function buildSelectPane() {
+  selectDiv = contentDiv.appendChild(document.createElement("div"));
+  selectDiv.setAttribute("class", "selectDiv");
+  selectDiv.setAttribute("id", "selectDiv");
+  selectDiv.innerHTML = tickers
     .map(
-      (ticker) => `<div class="infoHolder">
-          <div class="ticker-info">
-            <div class="block"></div>
-            <div class="category">
-                <div class="ticker">${ticker}</div>
-                <div class="price">$123.67</div>
-            </div>
-          </div>
-          <div class="change-info">
-            <div class="percent">+0.86<span>%</span></div>
-            <div class="value">+$1.05</div>
-          </div>
-      </div>`
+      (ticker, i) =>
+        `<span style="color:${colors[i]}">${ticker} <input type="checkbox" value="${ticker}" id="${ticker}Check"/></span>`
     )
     .join("");
 
-  let dataArr;
-  let infoHolders = chartDiv2.querySelectorAll(".infoHolder");
-  let tickerInfos = chartDiv2.querySelectorAll(".ticker-info");
-  let tickerBlocks = chartDiv2.querySelectorAll(".ticker-info .block");
-  let prices = chartDiv2.querySelectorAll(".ticker-info .category .price");
-  let changeInfos = chartDiv2.querySelectorAll(".change-info");
-  let percents = chartDiv2.querySelectorAll(".change-info .percent");
-  let values = chartDiv2.querySelectorAll(".change-info .value");
-
-  updateInfo();
-
-  function updateInfo() {
-    dataArr = tickers.map((ticker) => dataByTicker.get(ticker));
-    const lastIndex = dataArr[0].length - 1;
-    //-- for each ticker
-    tickers.map((ticker, i) => {
-      const priceChange = dataArr[i][lastIndex].priceChange;
-      const percentChange = dataArr[i][lastIndex].percentChange;
-      let sign = priceChange == 0 ? "" : "+";
-      changeInfos[i].style.color = upColor;
-      if (priceChange < 0) {
-        sign = "-";
-        changeInfos[i].style.color = downColor;
-      }
-      infoHolders[i].style.top = 60 * i + "px";
-      tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
-        colors[i];
-      prices[i].textContent =
-        "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
-      percents[i].innerHTML = `${sign}${Math.abs(
-        dataArr[i][lastIndex].percentChange
-      )}`;
-      values[i].textContent = sign + "$" + Math.abs(priceChange);
-    });
-  }
-
-  //-----------------------------//
-  //-------- init chart ---------//
-  //-----------------------------//
-  const svg = d3
-    .select("#chartHolder1")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .append("g");
-
-  //   // const xValue = (d) => d["timestamp"];
-  //   // const yValue = (d) => +d["price"];
-
-  //   //-- set ranges
-  //   // let xScale = d3
-  //   //   .scaleUtc()
-  //   //   .domain(d3.extent(selectedData, xValue))
-  //   //   .range([0, innerWidth]);
-  //   // let yScale = d3
-  //   //   .scaleLinear()
-  //   //   .domain(d3.extent(selectedData, yValue))
-  //   //   .range([innerHeight, 0]);
-
-  //   //-- set grids :: vertical xGrid and horizontal yGrid
-  //   // let xGrid = (g) =>
-  //   //   g
-  //   //     .attr("class", "vline")
-  //   //     .selectAll("line")
-  //   //     .data(xScale.ticks(10))
-  //   //     .join("line")
-  //   //     .attr("x1", (d) => xScale(d))
-  //   //     .attr("x2", (d) => xScale(d))
-  //   //     .attr("y1", 0 + margin.top - 8) /* 8px extra long */
-  //   //     .attr("y2", height - margin.bottom + 8); /* 8px extra long */
-  //   // let yGrid = (g) =>
-  //   //   g
-  //   //     .attr("class", "hline")
-  //   //     .selectAll("line")
-  //   //     .data(yScale.ticks(5))
-  //   //     .join("line")
-  //   //     .attr("x1", 0)
-  //   //     .attr("x2", innerWidth + 75) /* 75px extra wide */
-  //   //     .attr("y1", (d) => yScale(d))
-  //   //     .attr("y2", (d) => yScale(d));
-  //   // let xGridG = svg
-  //   //   .append("g")
-  //   //   .attr("transform", `translate(${margin.left}, 0)`)
-  //   //   .call(xGrid);
-  //   // let yGridG = svg
-  //   //   .append("g")
-  //   //   .attr("transform", `translate(0, ${margin.top})`)
-  //   //   .call(yGrid);
-
-  //   //-- add X axis
-  //   // let xAxisB = svg
-  //   //   .append("g")
-  //   //   .attr("id", "xAxisB")
-  //   //   .attr("class", "xAxis")
-  //   //   .attr(
-  //   //     "transform",
-  //   //     `translate(${margin.left}, ${height - margin.bottom + 8})`
-  //   //   );
-  //   // xAxisB
-  //   //   .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-  //   //   .call((g) => g.select(".domain").remove());
-  //   // let xAxisT = svg
-  //   //   .append("g")
-  //   //   .attr("id", "xAxisT")
-  //   //   .attr("class", "xAxis")
-  //   //   .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
-  //   // xAxisT
-  //   //   .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-  //   //   .call((g) => g.select(".domain").remove());
-
-  //   //-- add Y axis
-  //   // let yAxis = svg
-  //   //   .append("g")
-  //   //   .attr("id", "yAxisR")
-  //   //   .attr("class", "yAxis")
-  //   //   .attr(
-  //   //     "transform",
-  //   //     `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
-  //   //   );
-  //   // yAxis
-  //   //   .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
-  //   //   .call((g) => g.select(".domain").remove());
-
-  //   //-- draw a line
-  //   // let line = svg
-  //   //   .append("g")
-  //   //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
-  //   //   .append("path")
-  //   //   .datum(selectedData)
-  //   //   .attr(
-  //   //     "d",
-  //   //     d3
-  //   //       .line()
-  //   //       .x((d) => xScale(d.timestamp))
-  //   //       .y((d) => yScale(d.price))
-  //   //   )
-  //   //   .attr("stroke", selectedColor)
-  //     .style("stroke-width", 2)
-  //     .style("fill", "none");
-
-  //   function updateChart() {
-  //     //-- update scales
-  //     // xScale = d3
-  //     //   .scaleUtc()
-  //     //   .domain(d3.extent(selectedData, xValue))
-  //     //   .range([0, innerWidth]);
-  //     // yScale = d3
-  //     //   .scaleLinear()
-  //     //   .domain(d3.extent(selectedData, yValue))
-  //     //   .range([innerHeight, 0]);
-  //     //-- update grids
-  //     // xGridG.call(xGrid);
-  //     // yGridG.call(yGrid);
-  //     //-- update ticks
-  //     // xAxisB
-  //     //   .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-  //     //   .call((g) => g.select(".domain").remove());
-  //     // xAxisT
-  //     //   .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-  //     //   .call((g) => g.select(".domain").remove());
-  //     // yAxis
-  //     //   .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
-  //     //   .call((g) => g.select(".domain").remove());
-  //     //-- update graph line
-  //     // line
-  //     //   .datum(selectedData)
-  //     //   .transition()
-  //     //   .duration(750)
-  //     //   .attr("stroke", selectedColor)
-  //     //   .attr(
-  //     //     "d",
-  //     //     d3
-  //     //       .line()
-  //     //       .x((d) => xScale(d.timestamp))
-  //     //       .y((d) => yScale(d.price))
-  //     //   );
-  //   }
-
-  // changeChart.reset = function (data) {
-  //   console.log("changeChart.reset called, data ??", data);
-  // };
-  changeChart.update = function () {
-    console.log("changeChart.update called, data ??", data);
-  };
-
-  return changeChart;
+  checkBoxes = selectDiv.getElementsByTagName("input");
+  console.log("typeof(checkBoxes)", typeof checkBoxes);
+  console.log("checkBoxes[0]", checkBoxes[0]);
+  console.log("checkBoxes", checkBoxes);
+  tickers.map((ticker) => {
+    const checkBox = document.getElementById(`${ticker}Check`);
+    checkBox.addEventListener("click", (e) => {
+      console.log("checkbox clicked", e.target.value);
+    }); //checkBox.add
+  });
 }
 
 function priceChart() {
@@ -575,4 +383,222 @@ function priceChart() {
   };
 
   return priceChart;
+}
+
+function changeChart() {
+  let changeChart = {};
+
+  chartDiv2 = contentDiv.appendChild(document.createElement("div"));
+  chartDiv2.setAttribute("id", "chartDiv2");
+  chartDiv2.setAttribute("class", "chartDiv");
+  chartDiv2.innerHTML = `
+    <div class="chartHolder" id="chartHolder2"></div>
+    <div class="indicationHolder" id="indicationHolder2"></div>
+  `;
+  chartHolder2 = document.getElementById("chartHolder2");
+  indicationHolder2 = document.getElementById("indicationHolder2");
+  indicationHolder2.innerHTML = tickers
+    .map(
+      (ticker) => `<div class="infoHolder">
+          <div class="ticker-info">
+            <div class="block"></div>
+            <div class="category">
+                <div class="ticker">${ticker}</div>
+                <div class="price">$123.67</div>
+            </div>
+          </div>
+          <div class="change-info">
+            <div class="percent">+0.86<span>%</span></div>
+            <div class="value">+$1.05</div>
+          </div>
+      </div>`
+    )
+    .join("");
+
+  let dataArr;
+  let infoHolders = chartDiv2.querySelectorAll(".infoHolder");
+  let tickerInfos = chartDiv2.querySelectorAll(".ticker-info");
+  let tickerBlocks = chartDiv2.querySelectorAll(".ticker-info .block");
+  let prices = chartDiv2.querySelectorAll(".ticker-info .category .price");
+  let changeInfos = chartDiv2.querySelectorAll(".change-info");
+  let percents = chartDiv2.querySelectorAll(".change-info .percent");
+  let values = chartDiv2.querySelectorAll(".change-info .value");
+
+  updateInfo();
+
+  function updateInfo() {
+    dataArr = tickers.map((ticker) => dataByTicker.get(ticker));
+    const lastIndex = dataArr[0].length - 1;
+    //-- for each ticker
+    tickers.map((ticker, i) => {
+      const priceChange = dataArr[i][lastIndex].priceChange;
+      const percentChange = dataArr[i][lastIndex].percentChange;
+      let sign = priceChange == 0 ? "" : "+";
+      changeInfos[i].style.color = upColor;
+      if (priceChange < 0) {
+        sign = "-";
+        changeInfos[i].style.color = downColor;
+      }
+      infoHolders[i].style.top = 60 * i + "px";
+      tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
+        colors[i];
+      prices[i].textContent =
+        "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
+      percents[i].innerHTML = `${sign}${Math.abs(
+        dataArr[i][lastIndex].percentChange
+      )}`;
+      values[i].textContent = sign + "$" + Math.abs(priceChange);
+    });
+  }
+
+  //-----------------------------//
+  //-------- init chart ---------//
+  //-----------------------------//
+  const svg = d3
+    .select("#chartHolder1")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g");
+
+  //   // const xValue = (d) => d["timestamp"];
+  //   // const yValue = (d) => +d["price"];
+
+  //   //-- set ranges
+  //   // let xScale = d3
+  //   //   .scaleUtc()
+  //   //   .domain(d3.extent(selectedData, xValue))
+  //   //   .range([0, innerWidth]);
+  //   // let yScale = d3
+  //   //   .scaleLinear()
+  //   //   .domain(d3.extent(selectedData, yValue))
+  //   //   .range([innerHeight, 0]);
+
+  //   //-- set grids :: vertical xGrid and horizontal yGrid
+  //   // let xGrid = (g) =>
+  //   //   g
+  //   //     .attr("class", "vline")
+  //   //     .selectAll("line")
+  //   //     .data(xScale.ticks(10))
+  //   //     .join("line")
+  //   //     .attr("x1", (d) => xScale(d))
+  //   //     .attr("x2", (d) => xScale(d))
+  //   //     .attr("y1", 0 + margin.top - 8) /* 8px extra long */
+  //   //     .attr("y2", height - margin.bottom + 8); /* 8px extra long */
+  //   // let yGrid = (g) =>
+  //   //   g
+  //   //     .attr("class", "hline")
+  //   //     .selectAll("line")
+  //   //     .data(yScale.ticks(5))
+  //   //     .join("line")
+  //   //     .attr("x1", 0)
+  //   //     .attr("x2", innerWidth + 75) /* 75px extra wide */
+  //   //     .attr("y1", (d) => yScale(d))
+  //   //     .attr("y2", (d) => yScale(d));
+  //   // let xGridG = svg
+  //   //   .append("g")
+  //   //   .attr("transform", `translate(${margin.left}, 0)`)
+  //   //   .call(xGrid);
+  //   // let yGridG = svg
+  //   //   .append("g")
+  //   //   .attr("transform", `translate(0, ${margin.top})`)
+  //   //   .call(yGrid);
+
+  //   //-- add X axis
+  //   // let xAxisB = svg
+  //   //   .append("g")
+  //   //   .attr("id", "xAxisB")
+  //   //   .attr("class", "xAxis")
+  //   //   .attr(
+  //   //     "transform",
+  //   //     `translate(${margin.left}, ${height - margin.bottom + 8})`
+  //   //   );
+  //   // xAxisB
+  //   //   .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+  //   //   .call((g) => g.select(".domain").remove());
+  //   // let xAxisT = svg
+  //   //   .append("g")
+  //   //   .attr("id", "xAxisT")
+  //   //   .attr("class", "xAxis")
+  //   //   .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
+  //   // xAxisT
+  //   //   .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+  //   //   .call((g) => g.select(".domain").remove());
+
+  //   //-- add Y axis
+  //   // let yAxis = svg
+  //   //   .append("g")
+  //   //   .attr("id", "yAxisR")
+  //   //   .attr("class", "yAxis")
+  //   //   .attr(
+  //   //     "transform",
+  //   //     `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
+  //   //   );
+  //   // yAxis
+  //   //   .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+  //   //   .call((g) => g.select(".domain").remove());
+
+  //   //-- draw a line
+  //   // let line = svg
+  //   //   .append("g")
+  //   //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
+  //   //   .append("path")
+  //   //   .datum(selectedData)
+  //   //   .attr(
+  //   //     "d",
+  //   //     d3
+  //   //       .line()
+  //   //       .x((d) => xScale(d.timestamp))
+  //   //       .y((d) => yScale(d.price))
+  //   //   )
+  //   //   .attr("stroke", selectedColor)
+  //     .style("stroke-width", 2)
+  //     .style("fill", "none");
+
+  //   function updateChart() {
+  //     //-- update scales
+  //     // xScale = d3
+  //     //   .scaleUtc()
+  //     //   .domain(d3.extent(selectedData, xValue))
+  //     //   .range([0, innerWidth]);
+  //     // yScale = d3
+  //     //   .scaleLinear()
+  //     //   .domain(d3.extent(selectedData, yValue))
+  //     //   .range([innerHeight, 0]);
+  //     //-- update grids
+  //     // xGridG.call(xGrid);
+  //     // yGridG.call(yGrid);
+  //     //-- update ticks
+  //     // xAxisB
+  //     //   .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+  //     //   .call((g) => g.select(".domain").remove());
+  //     // xAxisT
+  //     //   .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+  //     //   .call((g) => g.select(".domain").remove());
+  //     // yAxis
+  //     //   .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+  //     //   .call((g) => g.select(".domain").remove());
+  //     //-- update graph line
+  //     // line
+  //     //   .datum(selectedData)
+  //     //   .transition()
+  //     //   .duration(750)
+  //     //   .attr("stroke", selectedColor)
+  //     //   .attr(
+  //     //     "d",
+  //     //     d3
+  //     //       .line()
+  //     //       .x((d) => xScale(d.timestamp))
+  //     //       .y((d) => yScale(d.price))
+  //     //   );
+  //   }
+
+  // changeChart.reset = function (data) {
+  //   console.log("changeChart.reset called, data ??", data);
+  // };
+  changeChart.update = function () {
+    console.log("changeChart.update called, data ??", data);
+  };
+
+  return changeChart;
 }
