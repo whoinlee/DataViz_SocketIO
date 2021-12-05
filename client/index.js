@@ -29,8 +29,8 @@ const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
 const colors = ["#1f77b4", "#9467bd", "#ff7f02", "#8c564b"];
 const upColor = "#2ca02c";
 const downColor = "#d62728";
-let pChart = {};
-let cChart = {};
+let pChart;
+let cChart;
 let currChart;
 
 //-- data
@@ -105,6 +105,7 @@ socket.on("market events", function (data) {
       });
     });
     // console.log("dataByTicker", dataByTicker);
+    // if (pChart.update) {
     if (pChart.update) {
       pChart.update();
     }
@@ -158,14 +159,24 @@ function buildSelectPane() {
   });
 }
 
+function hideChart() {
+  pChart.hide();
+}
+
 function updateChart(tickerArr) {
   if ((tickerArr.length = 1)) {
-    pChart = priceChart();
+    if (pChart) {
+      pChart.redraw(tickerArr[0]);
+    } else {
+      pChart = priceChart(tickerArr[0]);
+    }
+  } else {
+    alert(tickerArr.length + " tickers selected");
   }
   console.log("updateChart :: pChart??", pChart);
 }
 
-function priceChart() {
+function priceChart(pTicker = "AAPL") {
   let priceChart = {};
 
   chartDiv1 = contentDiv.appendChild(document.createElement("div"));
@@ -178,7 +189,7 @@ function priceChart() {
             <div class="ticker-info">
               <div class="block"></div>
               <div class="category">
-                  <div class="ticker">AAPL</div>
+                  <div class="ticker">${pTicker}</div>
                   <div class="price">$123.67</div>
               </div>
             </div>
@@ -197,8 +208,10 @@ function priceChart() {
   let changeInfo = chartDiv1.querySelector(".change-info");
 
   let selectedIndex, selectedTicker, selectedColor, selectedData;
-  selectedIndex = 0;
-  selectedTicker = tickers[selectedIndex];
+  // selectedIndex = 0;
+  // selectedTicker = tickers[selectedIndex];
+  selectedIndex = tickers.indexOf(pTicker);
+  selectedTicker = pTicker;
   selectedColor = colors[selectedIndex];
   selectedData = dataByTicker.get(tickers[selectedIndex]);
   updateInfo();
@@ -328,6 +341,14 @@ function priceChart() {
     updateChart();
   });
 
+  function hideInfo() {
+    indicationHolder1.style.visibility = "hidden";
+  }
+
+  function showInfo() {
+    indicationHolder1.style.visibility = "visible";
+  }
+
   function updateInfo() {
     //-- ticker info color change
     tickerInfo.style.color = selectedColor;
@@ -353,7 +374,7 @@ function priceChart() {
       sign + "$" + Math.abs(priceChange);
   }
 
-  function updateChart() {
+  function updateChart(transition = true) {
     //-- update scales
     xScale = d3
       .scaleUtc()
@@ -382,8 +403,8 @@ function priceChart() {
     //-- update graph line
     line
       .datum(selectedData)
-      .transition()
-      .duration(500)
+      // .transition()
+      // .duration(500)
       .attr("stroke", selectedColor)
       .attr(
         "d",
@@ -392,12 +413,47 @@ function priceChart() {
           .x((d) => xScale(d.timestamp))
           .y((d) => yScale(d.price))
       );
+    if (transition) line.transition().duration(500);
+  }
+
+  function hideLine() {
+    line.attr("visibility", "hidden");
+  }
+
+  function showLine() {
+    line.attr("visibility", "visible");
   }
 
   priceChart.update = function () {
+    console.log("priceChart.update");
+
     selectedData = dataByTicker.get(tickers[selectedIndex]);
+
+    // showInfo();
+    // showLine();
     updateInfo();
     updateChart();
+  };
+
+  priceChart.hide = function () {
+    console.log("priceChart.hide");
+
+    hideInfo();
+    hideLine();
+  };
+
+  priceChart.redraw = function (ticker) {
+    console.log("priceChart.redraw");
+
+    selectedIndex = tickers.indexOf(ticker);
+    selectedTicker = ticker;
+    selectedColor = colors[selectedIndex];
+    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    const transition = false;
+    showInfo();
+    showLine();
+    updateInfo();
+    updateChart(transition);
   };
 
   return priceChart;
