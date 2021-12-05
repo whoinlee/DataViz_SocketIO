@@ -517,20 +517,15 @@ function priceChart() {
 
     //-- calculate priceChange and percentChange
     const lastIndex = selectedData.length - 1;
-    // let firstPrice = selectedData[0].price;
-    let lastPrice = selectedData[lastIndex].price;
-    // let priceChange = Math.round((lastPrice - firstPrice) * 100) / 100;
-
-    let priceChange = selectedData[lastIndex].priceChange;
-    let percentChange = selectedData[lastIndex].percentChange;
+    const lastPrice = Math.round(selectedData[lastIndex].price * 100) / 100;
+    const priceChange = selectedData[lastIndex].priceChange;
+    const percentChange = selectedData[lastIndex].percentChange;
     let sign = priceChange == 0 ? "" : "+";
     changeInfo.style.color = upColor;
     if (priceChange < 0) {
       sign = "-";
       changeInfo.style.color = downColor;
     }
-    lastPrice = Math.round(lastPrice * 100) / 100;
-    //
     chartDiv1.querySelector(".ticker").textContent = selectedTicker;
     indicationHolder1.querySelector(".price").textContent = "$" + lastPrice;
     indicationHolder1.querySelector(".percent").innerHTML = `${sign}${Math.abs(
