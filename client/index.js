@@ -71,7 +71,8 @@ socket.on("market events", function (data) {
     const changesArr = data.changes;
     tickers.map((currTicker) => {
       let dataArr = dataByTicker.get(currTicker);
-      let lastPrice = dataArr[dataArr.length - 1].price;
+      let lastPrice =
+        dataArr.length > 0 ? dataArr[dataArr.length - 1].price : 0;
       let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
       const price = newDataObj ? lastPrice + newDataObj.change : lastPrice;
       dataArr.push({ timestamp: timestamp, ticker: currTicker, price: price });
@@ -83,7 +84,7 @@ socket.on("market events", function (data) {
   }
 });
 socket.on("start new day", function (data) {
-  console.log("NewDay", data);
+  console.log("\nNewDay", data);
   /*
     {
       "timestamp": 1489483800000,
@@ -96,9 +97,6 @@ socket.on("start new day", function (data) {
     dataArr.length = 0;
   });
   console.log("NewDay :: dataByTicker??? ", dataByTicker);
-
-  // pChart.reset(data);
-  // cChart.reset(data);
 });
 
 function priceChart(dataByTicker) {
@@ -328,10 +326,6 @@ function priceChart(dataByTicker) {
           .y((d) => yScale(d.price))
       );
   }
-
-  priceChart.reset = function (data) {
-    console.log("priceChart.reset called, data ??", data);
-  };
 
   priceChart.update = function () {
     console.log("priceChart.update called, data ??", dataByTicker);
