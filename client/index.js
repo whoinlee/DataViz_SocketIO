@@ -31,9 +31,11 @@ const upColor = "#2ca02c";
 const downColor = "#d62728";
 let pChart = {};
 let cChart = {};
+let currChart;
 
 //-- data
 let dataByTicker; //map
+let selectedTickers = [];
 // let dataArr = []; //array
 
 //-- load historical data
@@ -64,7 +66,7 @@ csv("/market-history", col, (error, data) => {
 
   buildSelectPane();
   // pChart = priceChart();
-  cChart = changeChart();
+  // cChart = changeChart();
 });
 
 //-- subscribe to updates
@@ -103,8 +105,9 @@ socket.on("market events", function (data) {
       });
     });
     // console.log("dataByTicker", dataByTicker);
-
-    // pChart.update();
+    if (pChart.update) {
+      pChart.update();
+    }
     // cChart.update();
   }
 });
@@ -136,15 +139,30 @@ function buildSelectPane() {
     .join("");
 
   checkBoxes = selectDiv.getElementsByTagName("input");
-  console.log("typeof(checkBoxes)", typeof checkBoxes);
-  console.log("checkBoxes[0]", checkBoxes[0]);
-  console.log("checkBoxes", checkBoxes);
   tickers.map((ticker) => {
     const checkBox = document.getElementById(`${ticker}Check`);
     checkBox.addEventListener("click", (e) => {
-      console.log("checkbox clicked", e.target.value);
-    }); //checkBox.add
+      console.log("e.target.value", e.target.value);
+      console.log("e.target.checked", e.target.checked);
+      if (e.target.checked) {
+        selectedTickers.push(e.target.value);
+      } else {
+        selectedTickers.splice(selectedTickers.indexOf(e.target.value), 1);
+      }
+      if (selectedTickers.length == 0) {
+        hideChart();
+      } else {
+        updateChart(selectedTickers);
+      }
+    });
   });
+}
+
+function updateChart(tickerArr) {
+  if ((tickerArr.length = 1)) {
+    pChart = priceChart();
+  }
+  console.log("updateChart :: pChart??", pChart);
 }
 
 function priceChart() {
