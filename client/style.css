@@ -63,6 +63,8 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* background-color: #ccc; */
+  /* border: 2px solid purple; */
 }
 
 #tickerSelection {
@@ -80,18 +82,16 @@ h1 {
   margin-bottom: 20px;
   width: var(--chart-div-width);
   height: var(--chart-div-height);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* border: 1px solid black; */
+  /* background-color: #ddd; */
+  border: 1px solid black;
 }
 
 .chartHolder {
   position: absolute;
   left: 0px;
   width: var(--chart-holder-width);
-  height: 100%;
-  /* border: 1px solid green; */
+  /* height: 100%; */
+  border: 1px solid green;
 }
 
 .indicationHolder {
