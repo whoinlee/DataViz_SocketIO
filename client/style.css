@@ -15,9 +15,9 @@
   --bold: 700;
   --regular: 400;
   /* chart dimensions */
-  --chart-div-width: 1000px;
-  --chart-div-height: 700px;
-  --chart-holder-width: 750px;
+  --chart-div-width: 1050px;
+  --chart-div-height: 600px;
+  --chart-holder-width: 800px;
   --chart-holder-height: var(--chart-div-height);
   --chart-indication-width: calc(
     var(--chart-div-width) - var(--chart-holder-width)
@@ -34,8 +34,8 @@
 body {
   font-family: "News Cycle", Sans-serif;
   font-size: 16px;
-  /* width: 100vw;
-  height: 100%; */
+  width: 100vw;
+  min-height: 100vh;
 }
 
 .container {
@@ -68,21 +68,22 @@ h1 {
 #tickerSelection {
   /* dropdown <select> */
   position: absolute;
-  top: -30px;
-  left: 20px;
+  top: -45px;
+  left: 0px;
 }
 
 /* -- chart related -- */
 .chartDiv {
   /*chart holders*/
   position: relative;
-  margin-top: 50px;
+  margin-top: 75px;
+  margin-bottom: 20px;
   width: var(--chart-div-width);
   height: var(--chart-div-height);
   display: flex;
   align-items: center;
   justify-content: center;
-  /* border: 1px solid green; */
+  /* border: 1px solid black; */
 }
 
 .chartHolder {
@@ -90,9 +91,7 @@ h1 {
   left: 0px;
   width: var(--chart-holder-width);
   height: 100%;
-  /* height: var(--chart-holder-height); */
-  /* background-color: #efefef; */
-  /* border: 1px solid black; */
+  /* border: 1px solid green; */
 }
 
 .indicationHolder {
@@ -100,30 +99,26 @@ h1 {
   left: var(--chart-holder-width);
   width: var(--chart-indication-width);
   height: 100%;
-  /* background-color: #eee; */
-  /* border: 1px solid purple; */
   display: flex;
   justify-content: space-between;
+  /* border: 1px solid red; */
 }
 
 /* .ticker-info --------- */
 .ticker-info {
-  padding-left: 10px;
   font-size: var(--primary-font-size);
-  /* color: var(--aapl-color);  */
 }
 
 .ticker-info .block {
   position: absolute;
-  top: 4px;
+  /* top: 4px; */
   width: 8px;
   height: 52px;
-  /* background-color: var(--aapl-color); */
 }
 
 .ticker-info .category {
   position: absolute;
-  left: 23px;
+  padding-left: 12px;
   font-weight: var(--bold);
   height: 60px;
 }
@@ -131,13 +126,13 @@ h1 {
 .category .ticker {
   position: absolute;
   font-weight: var(--bold);
-  top: -6px;
+  top: -10px;
   text-transform: uppercase;
 }
 
 .ticker-info .category .price {
   position: absolute;
-  top: 30px;
+  top: 25px;
   font-size: var(--secondary-font-size);
   font-weight: var(--regular);
 }
@@ -145,8 +140,8 @@ h1 {
 /* .change-info --------- */
 .change-info {
   position: absolute;
-  left: 160px;
-  padding-right: 10px;
+  right: 10px;
+  top: -10px;
   font-size: var(--primary-font-size);
   font-weight: var(--bold);
   width: 90px;
@@ -155,8 +150,7 @@ h1 {
 
 .change-info .percent {
   position: absolute;
-  top: -6px;
-  right: 16px;
+  right: 0px;
 }
 
 .change-info .percent span {
@@ -165,14 +159,15 @@ h1 {
 
 .change-info .value {
   position: absolute;
-  top: 30px;
-  right: 16px;
+  top: 35px;
+  right: 0px;
   font-size: var(--secondary-font-size);
   font-weight: var(--regular);
 }
 
 /* axis */
 .tick line {
+  /* hide x & y axis */
   display: none;
 }
 
@@ -194,3 +189,7 @@ h1 {
   stroke: var(--vline-color);
   shape-rendering: crispEdges;
 }
+
+/* svg {
+  background-color: #ccc;
+} */
