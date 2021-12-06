@@ -33,7 +33,8 @@ const downColor = "#d62728"; //-- red
 let stockChart;
 
 //-- data
-let dataByTicker; //map
+let orgData; //original data
+let dataByTicker; //data map by ticker
 let selectedTickers = [];
 
 //-- load historical data
@@ -48,7 +49,9 @@ csv("/market-history", col, (error, data) => {
     contentDiv.textContent = error.target.response;
     return;
   }
+
   contentDiv.textContent = ""; //-- clear 'loading' msg
+  orgData = data;
 
   //-- group data by ticker
   dataByTicker = d3.group(data, (d) => d.ticker);
@@ -69,7 +72,8 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  console.log("Change", data);
+  //-- TODO
+  // console.log("Change", data);
   /*
   {timestamp: 1638883200000, changes: Array(3)}
     changes: Array(3)
@@ -78,6 +82,9 @@ socket.on("market events", function (data) {
       2: {ticker: 'MSFT', change: 0.0393}
     timestamp: 1638883200000
   */
+
+  //-- temporarily commented out
+  //-- TODO
   if (data.changes.length > 0) {
     const timestamp = data.timestamp + "";
     const changesArr = data.changes;
@@ -100,9 +107,11 @@ socket.on("market events", function (data) {
       });
     });
 
-    if (stockChart) {
-      stockChart.update(selectedTickers);
-    }
+    //-- temporarily commented out
+    //-- TODO
+    // if (stockChart) {
+    //   stockChart.update(selectedTickers);
+    // }
   }
 });
 socket.on("start new day", function (data) {
@@ -150,41 +159,17 @@ function buildSelectPane() {
   });
 }
 
-// function buildChartPane() {
-//   console.log("buildChartPane :: selectedTickers, ", selectedTickers);
-//   if (selectedTickers.length == 0) selectedTickers = [tickers[0]];
-//   stockChart = buildStockChart();
-// }
-
-function hideChartPane() {
-  console.log("hideChartPane :: selectedTickers, ", selectedTickers);
-  stockChart.hide();
-}
-
-function updateChartPane(pTickers) {
-  console.log("updateChartPane :: pTickers, ", pTickers);
-  console.log("updateChartPane :: selectedTickers, ", selectedTickers);
-  if (!stockChart) {
-    stockChart = buildStockChart(pTickers);
-  }
-  stockChart.redraw(pTickers);
-}
-
-function buildStockChart(pTickers = [tickers[0]]) {
-  console.log("buildStockChart, pTickers?? ", pTickers);
-  const chartTypes = ["price", "change"];
-  let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
+function buildChartPane(pTickers = [tickers[0]]) {
+  console.log("buildChartPane, pTickers?? ", pTickers);
 
   let stockPCChart = {};
-  //TODO, temporary
-  let selectedData, selectedIndex, selectedColor, selectedTicker;
-  let dataArr;
   let infoHolders;
   let prices;
   let changeInfos, percents, values;
   buildInfo(pTickers);
+
   function buildInfo(pTickers = pTickers) {
-    console.log("buildStockChart, buildInfo, pTickers ??", pTickers);
+    console.log("buildChartPane, buildInfo, pTickers ??", pTickers);
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
       chartDiv.setAttribute("class", "chartDiv");
@@ -222,12 +207,12 @@ function buildStockChart(pTickers = [tickers[0]]) {
     updateInfo(pTickers);
   }
   function updateInfo(pTickers = pTickers) {
-    console.log("buildStockChart, updateInfo, pTickers? ", pTickers);
+    console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
     const lastIndex = dataArr[0].length - 1;
     //-- for each ticker
     pTickers.map((ticker, i) => {
-      console.log("buildStockChart, updateInfo, i? ", i);
+      console.log("buildChartPane, updateInfo, i? ", i);
       const priceChange = dataArr[i][lastIndex].priceChange;
       let sign = priceChange == 0 ? "" : "+";
       changeInfos[i].style.color = upColor;
@@ -245,15 +230,17 @@ function buildStockChart(pTickers = [tickers[0]]) {
     });
   }
   function showInfo() {
-    console.log("buildStockChart, showInfo");
+    console.log("buildChartPane, showInfo");
     indicationHolder.style.visibility = "visible";
   }
   function hideInfo() {
-    console.log("buildStockChart, hideInfo");
+    console.log("buildChartPane, hideInfo");
     indicationHolder.style.visibility = "hidden";
   }
 
-  let svg, line;
+  const chartTypes = ["price", "change"];
+  let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
+  let svg, line, linesByTicker;
   let xScale,
     yScale,
     xValue,
@@ -265,179 +252,400 @@ function buildStockChart(pTickers = [tickers[0]]) {
     xAxisB,
     xAxisT,
     yAxis;
-  buildChart();
-  function buildChart() {
-    console.log("buildStockChart, buildChart");
+  //TODO, temporary
+  let selectedData, selectedIndex, selectedColor, selectedTicker;
+  let dataArr;
+  buildChart(chartType);
 
-    //TODO: by chartType
+  function buildChart(pChartType = chartType) {
+    console.log("buildChartPane:: buildChart, pChartType ?? ", pChartType);
 
-    const selectedData = dataByTicker.get(tickers[0]);
-    const selectedColor = colors[selectedIndex];
+    if (svg) {
+      d3.selectAll("svg").remove();
+    }
+
     svg = d3
       .select("#chartHolder")
       .append("svg")
       .attr("width", width)
       .attr("height", height)
       .append("g");
-    xValue = (d) => d["timestamp"];
-    yValue = (d) => d["price"];
 
-    //-- set ranges
-    xScale = d3
-      .scaleUtc()
-      .domain(d3.extent(selectedData, xValue))
-      .range([0, innerWidth]);
-    yScale = d3
-      .scaleLinear()
-      .domain(d3.extent(selectedData, yValue))
-      .range([innerHeight, 0]);
+    //TODO: by chartType
 
-    //-- set grids :: vertical xGrid and horizontal yGrid
-    xGrid = (g) =>
-      g
-        .attr("class", "vline")
-        .selectAll("line")
-        .data(xScale.ticks(10))
-        .join("line")
-        .attr("x1", (d) => xScale(d))
-        .attr("x2", (d) => xScale(d))
-        .attr("y1", 0 + margin.top - 8) /* 8px extra long */
-        .attr("y2", height - margin.bottom + 8); /* 8px extra long */
-    yGrid = (g) =>
-      g
-        .attr("class", "hline")
-        .selectAll("line")
-        .data(yScale.ticks(5))
-        .join("line")
-        .attr("x1", 0)
-        .attr("x2", innerWidth + 75) /* 75px extra wide */
-        .attr("y1", (d) => yScale(d))
-        .attr("y2", (d) => yScale(d));
-    xGridG = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, 0)`)
-      .call(xGrid);
-    yGridG = svg
-      .append("g")
-      .attr("transform", `translate(0, ${margin.top})`)
-      .call(yGrid);
+    let selectedTicker, selectedData, selectedColor;
+    const buildPriceChart = () => {
+      //-- TODO
+      // d3.selectAll("svg > *").remove();
 
-    //-- add X axis
-    xAxisB = svg
-      .append("g")
-      .attr("id", "xAxisB")
-      .attr("class", "xAxis")
-      .attr(
-        "transform",
-        `translate(${margin.left}, ${height - margin.bottom + 8})`
+      //-- TODO
+      selectedTicker = pTickers[0];
+      selectedData = dataByTicker.get(selectedTicker);
+      selectedColor = colorsByTicker[selectedTicker];
+      // svg = d3
+      //   .select("#chartHolder")
+      //   .append("svg")
+      //   .attr("width", width)
+      //   .attr("height", height)
+      //   .append("g");
+      xValue = (d) => d["timestamp"];
+      yValue = (d) => d["price"];
+
+      //-- set ranges
+      xScale = d3
+        .scaleUtc()
+        .domain(d3.extent(selectedData, xValue))
+        .range([0, innerWidth]);
+      yScale = d3
+        .scaleLinear()
+        .domain(d3.extent(selectedData, yValue))
+        .range([innerHeight, 0]);
+
+      //-- set grids :: vertical xGrid and horizontal yGrid
+      xGrid = (g) =>
+        g
+          .attr("class", "vline")
+          .selectAll("line")
+          .data(xScale.ticks(10))
+          .join("line")
+          .attr("x1", (d) => xScale(d))
+          .attr("x2", (d) => xScale(d))
+          .attr("y1", 0 + margin.top - 8) /* 8px extra long */
+          .attr("y2", height - margin.bottom + 8); /* 8px extra long */
+      yGrid = (g) =>
+        g
+          .attr("class", "hline")
+          .selectAll("line")
+          .data(yScale.ticks(5))
+          .join("line")
+          .attr("x1", 0)
+          .attr("x2", innerWidth + 75) /* 75px extra wide */
+          .attr("y1", (d) => yScale(d))
+          .attr("y2", (d) => yScale(d));
+      xGridG = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, 0)`)
+        .call(xGrid);
+      yGridG = svg
+        .append("g")
+        .attr("transform", `translate(0, ${margin.top})`)
+        .call(yGrid);
+
+      //-- add X axis
+      xAxisB = svg
+        .append("g")
+        .attr("id", "xAxisB")
+        .attr("class", "xAxis")
+        .attr(
+          "transform",
+          `translate(${margin.left}, ${height - margin.bottom + 8})`
+        );
+      xAxisB
+        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+      xAxisT = svg
+        .append("g")
+        .attr("id", "xAxisT")
+        .attr("class", "xAxis")
+        .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
+      xAxisT
+        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+
+      //-- add Y axis
+      yAxis = svg
+        .append("g")
+        .attr("id", "yAxisR")
+        .attr("class", "yAxis")
+        .attr(
+          "transform",
+          `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
+        );
+      yAxis
+        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+        .call((g) => g.select(".domain").remove());
+
+      //-- draw a line
+      if (line) line.remove();
+      line = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .append("path")
+        .datum(selectedData)
+        .attr(
+          "d",
+          d3
+            .line()
+            .x((d) => xScale(d.timestamp))
+            .y((d) => yScale(d.price))
+        )
+        .attr("stroke", selectedColor)
+        .style("stroke-width", 2)
+        .style("fill", "none");
+    };
+    const buildChangeChart = () => {
+      console.log(
+        "buildChartPane:: buildChangeChart, building comparison chart !!!!!!!!!!!!!!"
       );
-    xAxisB
-      .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-      .call((g) => g.select(".domain").remove());
-    xAxisT = svg
-      .append("g")
-      .attr("id", "xAxisT")
-      .attr("class", "xAxis")
-      .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
-    xAxisT
-      .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-      .call((g) => g.select(".domain").remove());
 
-    //-- add Y axis
-    yAxis = svg
-      .append("g")
-      .attr("id", "yAxisR")
-      .attr("class", "yAxis")
-      .attr(
-        "transform",
-        `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
+      selectedTicker = pTickers[0];
+      console.log(
+        "buildChartPane:: buildChangeChart, selectedTicker?? ",
+        selectedTicker
       );
-    yAxis
-      .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
-      .call((g) => g.select(".domain").remove());
+      selectedData = dataByTicker.get(selectedTicker);
+      selectedColor = colorsByTicker[selectedTicker];
+      let percentChangeData = [];
+      pTickers.map((ticker) => {
+        const dataArrByTicker = dataByTicker.get(ticker);
+        // console.log("dataArrByTicker??", dataArrByTicker);
+        let percentChangeArr = dataArrByTicker.map(
+          (item) => item.percentChange
+        );
+        // console.log("percentChangeArr??", percentChangeArr);
+        percentChangeData = [...percentChangeData, ...percentChangeArr];
+      });
+      percentChangeData.sort();
+      console.log("percentChangeData???", percentChangeData);
 
-    //-- draw a line
-    line = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      .append("path")
-      .datum(selectedData)
-      .attr(
-        "d",
-        d3
-          .line()
-          .x((d) => xScale(d.timestamp))
-          .y((d) => yScale(d.price))
-      )
-      .attr("stroke", selectedColor)
-      .style("stroke-width", 2)
-      .style("fill", "none");
+      xValue = (d) => d["timestamp"];
+      yValue = (d) => d["percentChange"];
+
+      //-- set ranges
+      xScale = d3
+        .scaleUtc()
+        .domain(d3.extent(selectedData, xValue))
+        .range([0, innerWidth]);
+      yScale = d3
+        .scaleLinear()
+        .domain(d3.extent(percentChangeData, yValue))
+        .range([innerHeight, 0]);
+
+      //-- set grids :: vertical xGrid and horizontal yGrid
+      xGrid = (g) =>
+        g
+          .attr("class", "vline")
+          .selectAll("line")
+          .data(xScale.ticks(10))
+          .join("line")
+          .attr("x1", (d) => xScale(d))
+          .attr("x2", (d) => xScale(d))
+          .attr("y1", 0 + margin.top - 8) /* 8px extra long */
+          .attr("y2", height - margin.bottom + 8); /* 8px extra long */
+      yGrid = (g) =>
+        g
+          .attr("class", "hline")
+          .selectAll("line")
+          .data(yScale.ticks(5))
+          .join("line")
+          .attr("x1", 0)
+          .attr("x2", innerWidth + 75) /* 75px extra wide */
+          .attr("y1", (d) => yScale(d))
+          .attr("y2", (d) => yScale(d));
+      xGridG = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, 0)`)
+        .call(xGrid);
+      yGridG = svg
+        .append("g")
+        .attr("transform", `translate(0, ${margin.top})`)
+        .call(yGrid);
+
+      //-- add X axis
+      xAxisB = svg
+        .append("g")
+        .attr("id", "xAxisB")
+        .attr("class", "xAxis")
+        .attr(
+          "transform",
+          `translate(${margin.left}, ${height - margin.bottom + 8})`
+        );
+      xAxisB
+        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+      xAxisT = svg
+        .append("g")
+        .attr("id", "xAxisT")
+        .attr("class", "xAxis")
+        .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
+      xAxisT
+        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+
+      //-- add Y axis
+      yAxis = svg
+        .append("g")
+        .attr("id", "yAxisR")
+        .attr("class", "yAxis")
+        .attr(
+          "transform",
+          `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
+        );
+      yAxis
+        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+        .call((g) => g.select(".domain").remove());
+
+      //-- draw a line
+      // if (line) line.remove();
+      // line = svg
+      //   .append("g")
+      //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
+      //   .append("path")
+      //   .datum(selectedData)
+      //   .attr(
+      //     "d",
+      //     d3
+      //       .line()
+      //       .x((d) => xScale(d.timestamp))
+      //       .y((d) => yScale(d.percentChange))
+      //   )
+      //   .attr("stroke", "#ffcc00")
+      //   .style("stroke-width", 2)
+      //   .style("fill", "none");
+    };
+
+    if (pChartType == "price") {
+      buildPriceChart();
+    } else {
+      buildChangeChart();
+    }
   }
-  function updateChart(transition = true) {
-    console.log("buildStockChart, updateChart");
-    //-- update scales
-    xScale = d3
-      .scaleUtc()
-      .domain(d3.extent(selectedData, xValue))
-      .range([0, innerWidth]);
-    yScale = d3
-      .scaleLinear()
-      .domain(d3.extent(selectedData, yValue))
-      .range([innerHeight, 0]);
+  function updateChart(transition = true, pTickers = pTickers) {
+    console.log("buildChartPane, updateChart, pTickers?? ", pTickers);
+    console.log("buildChartPane, updateChart, 1 chartType?? ", chartType);
 
-    //-- update grids
-    xGridG.call(xGrid);
-    yGridG.call(yGrid);
+    if (pTickers.length > 1 && chartType == "price") {
+      chartType = "change";
+      //TODO
+      buildChart("change");
+    }
 
-    //-- update ticks
-    xAxisB
-      .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-      .call((g) => g.select(".domain").remove());
-    xAxisT
-      .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-      .call((g) => g.select(".domain").remove());
-    yAxis
-      .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
-      .call((g) => g.select(".domain").remove());
+    console.log("buildChartPane, updateChart, 2 chartType?? ", chartType);
 
-    //-- update graph line
-    // line.remove();
-    line
-      .datum(selectedData)
-      .transition()
-      .duration(500)
-      .attr("stroke", selectedColor)
-      .attr(
-        "d",
-        d3
-          .line()
-          .x((d) => xScale(d.timestamp))
-          .y((d) => yScale(d.price))
-      );
+    const updatePriceChart = () => {
+      console.log("buildChartPane, updatePriceChart");
+      //-- update scales
+      xScale = d3
+        .scaleUtc()
+        .domain(d3.extent(selectedData, xValue))
+        .range([0, innerWidth]);
+      yScale = d3
+        .scaleLinear()
+        .domain(d3.extent(selectedData, yValue))
+        .range([innerHeight, 0]);
+
+      //-- update grids
+      xGridG.call(xGrid);
+      yGridG.call(yGrid);
+
+      //-- update ticks
+      xAxisB
+        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+      xAxisT
+        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+        .call((g) => g.select(".domain").remove());
+      yAxis
+        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+        .call((g) => g.select(".domain").remove());
+
+      //-- update graph line
+      // line.remove();
+      line
+        .datum(selectedData)
+        .transition()
+        .duration(500)
+        .attr("stroke", selectedColor)
+        .attr(
+          "d",
+          d3
+            .line()
+            .x((d) => xScale(d.timestamp))
+            .y((d) => yScale(d.price))
+        );
+    };
+
+    const updateChangeChart = () => {
+      console.log("buildChartPane, updateChangeChart --- not implemented yet");
+
+      //-- update scales
+      // xScale = d3
+      //   .scaleUtc()
+      //   .domain(d3.extent(selectedData, xValue))
+      //   .range([0, innerWidth]);
+      // yScale = d3
+      //   .scaleLinear()
+      //   .domain(d3.extent(selectedData, yValue))
+      //   .range([innerHeight, 0]);
+
+      //-- update grids
+      // xGridG.call(xGrid);
+      // yGridG.call(yGrid);
+
+      //-- update ticks
+      // xAxisB
+      //   .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+      //   .call((g) => g.select(".domain").remove());
+      // xAxisT
+      //   .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+      //   .call((g) => g.select(".domain").remove());
+      // yAxis
+      //   .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+      //   .call((g) => g.select(".domain").remove());
+
+      //-- update graph line
+      // // line.remove();
+      // line
+      //   .datum(selectedData)
+      //   .transition()
+      //   .duration(500)
+      //   .attr("stroke", selectedColor)
+      //   .attr(
+      //     "d",
+      //     d3
+      //       .line()
+      //       .x((d) => xScale(d.timestamp))
+      //       .y((d) => yScale(d.price))
+      //   );
+    };
+
+    if (chartType == "price") {
+      updatePriceChart();
+    } else {
+      updateChangeChart();
+    }
+
     // if (transition) line.transition().duration(500);
   }
   function showChart() {
-    console.log("buildStockChart, showChart");
+    console.log("buildChartPane, showChart");
     line.attr("visibility", "visible");
   }
   function hideChart() {
-    console.log("buildStockChart, hideChart");
+    console.log("buildChartPane, hideChart");
     line.attr("visibility", "hidden");
   }
 
+  stockPCChart.show = function () {
+    console.log("stockPCChart.show");
+    showInfo();
+    showChart();
+  };
   stockPCChart.hide = function () {
     console.log("stockPCChart.hide");
     hideInfo();
     hideChart();
   };
+
   stockPCChart.update = function (pTickers = pTickers) {
     //TODO: temporary, onChange event
-    console.log("stockPCChart.update, pTickers?? ", pTickers);
+    console.log("stockPCChart.update, ever??????? pTickers?? ", pTickers);
 
     updateInfo(pTickers);
     //TODO: temporary, onChange event
     console.log("stockPCChart.update, selectedIndex ??", selectedIndex);
     selectedData = dataByTicker.get(tickers[selectedIndex]);
+    //-- update current chart on "market change" event
     updateChart();
   };
   stockPCChart.redraw = function (pTickers = pTickers) {
@@ -450,9 +658,30 @@ function buildStockChart(pTickers = [tickers[0]]) {
     selectedColor = colors[selectedIndex];
     selectedData = dataByTicker.get(tickers[selectedIndex]);
     const transition = false;
-    updateChart(transition);
+
+    updateChart(transition, pTickers);
     showChart();
+  };
+  stockPCChart.hideChartByTicker = function (pTicker) {
+    console.log("stockPCChart.hideChartByTicker, pTicker?? ", pTicker);
+  };
+  stockPCChart.showChartByTicker = function (pTicker) {
+    console.log("stockPCChart.showChartByTicker, pTicker?? ", pTicker);
   };
 
   return stockPCChart;
+}
+
+function updateChartPane(pTickers) {
+  console.log("updateChartPane :: pTickers, ", pTickers);
+  console.log("updateChartPane :: selectedTickers, ", selectedTickers);
+  if (!stockChart) {
+    stockChart = buildChartPane(pTickers);
+  }
+  stockChart.redraw(pTickers);
+}
+
+function hideChartPane() {
+  console.log("hideChartPane :: selectedTickers, ", selectedTickers);
+  stockChart.hide();
 }
