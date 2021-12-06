@@ -7,7 +7,7 @@
   --origin-color: #000000;
   --primary-color: black;
   /* font sizes */
-  --time-font-size: 0.8em; /* New Cycle, regular */
+  --time-font-size: 13px; /* New Cycle, regular */
   --percent-font-size: 24px; /* New Cycle, bold */
   --primary-font-size: 32px; /* New Cycle, bold */
   --secondary-font-size: 16px; /* New Cycle, regular */
@@ -21,7 +21,7 @@
   --chart-holder-height: var(--chart-div-height);
   --chart-indication-width: calc(
     var(--chart-div-width) - var(--chart-holder-width)
-  ); /*250px */
+  ); /* (1050-800)px = 250px */
   --chart-indication-height: var(--chart-div-height);
 }
 
@@ -63,19 +63,10 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* background-color: #ccc; */
-  /* border: 2px solid purple; */
 }
 
-#tickerSelection {
-  /* dropdown <select> */
-  position: absolute;
-  top: -45px;
-  left: 0px;
-}
-
+/* -- selectPane related -- */
 .selectDiv {
-  /* margin-left: 200px; */
   background-color: #eee;
   width: 600px;
   height: 100px;
@@ -90,12 +81,11 @@ h1 {
   padding-right: 20px;
   font-weight: var(--bold);
 }
+/* ----------------------- */
 
-/* -- chart related -- */
+/* -- chartPane related --- */
 .chartDiv {
-  /*chart holders*/
   position: relative;
-  /* margin-top: 75px; */
   margin-bottom: 20px;
   width: var(--chart-div-width);
   height: var(--chart-div-height);
@@ -124,27 +114,25 @@ h1 {
   height: 60px;
   display: flex;
   justify-content: space-between;
-  /* background-color: #ddd; */
   /* border: 1px solid red; */
 }
+/* ----------------------- */
 
-/* .ticker-info --------- */
+/* .ticker-info ---------- */
 .ticker-info {
   font-size: var(--primary-font-size);
+  font-weight: var(--bold);
 }
 
 .ticker-info .block {
   position: absolute;
-  /* top: 4px; */
   width: 8px;
   height: 52px;
-  /* background-color: black; */
 }
 
 .ticker-info .category {
   position: absolute;
   padding-left: 12px;
-  font-weight: var(--bold);
   height: 60px;
 }
 
@@ -161,6 +149,7 @@ h1 {
   font-size: var(--secondary-font-size);
   font-weight: var(--regular);
 }
+/* ---------------------- */
 
 /* .change-info --------- */
 .change-info {
@@ -180,6 +169,7 @@ h1 {
 
 .change-info .percent span {
   font-size: var(--percent-font-size);
+  font-weight: var(--bold);
 }
 
 .change-info .value {
@@ -189,15 +179,15 @@ h1 {
   font-size: var(--secondary-font-size);
   font-weight: var(--regular);
 }
+/* ---------------------- */
 
 /* axis */
 .tick line {
-  /* hide x & y axis */
   display: none;
 }
 
 .xAxis .tick text {
-  font-size: 13px;
+  font-size: var(--time-font-size);
 }
 
 .yAxis .tick text {
