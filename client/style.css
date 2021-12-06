@@ -67,13 +67,13 @@ h1 {
 
 /* -- selectPane related -- */
 .selectDiv {
-  background-color: #eee;
   width: 600px;
   height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1em;
+  /* background-color: #eee; */
 }
 
 .selectDiv span {
@@ -89,7 +89,7 @@ h1 {
   margin-bottom: 20px;
   width: var(--chart-div-width);
   height: var(--chart-div-height);
-  background-color: #ddd;
+  /* background-color: #ddd; */
   /* border: 1px solid black; */
 }
 
