@@ -14,16 +14,7 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 
 //-- HTML elements
 const contentDiv = document.getElementById("content");
-let chartDiv;
-let indicationHolder;
-
-let selectDiv;
-let checkBoxes;
-let tickerSelection;
-let indicationHolder1, indicationHolder2;
-let chartDiv1, chartDiv2;
-let chartHolder;
-let chartHolder1, chartHolder2;
+let chartDiv, chartHolder, indicationHolder;
 
 //-- time related
 const formatTime = utcFormat("%H:%M");
@@ -31,10 +22,15 @@ const formatTime = utcFormat("%H:%M");
 //-- chart related
 const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
 const colors = ["#1f77b4", "#9467bd", "#ff7f02", "#8c564b"];
+const colorsByTicker = {
+  AAPL: "#1f77b4",
+  GOOGL: "#9467bd",
+  FB: "#ff7f02",
+  MSFT: "#8c564b",
+};
 const upColor = "#2ca02c"; //-- green
 const downColor = "#d62728"; //-- red
 let stockChart;
-let currChart;
 
 //-- data
 let dataByTicker; //map
@@ -146,9 +142,9 @@ function buildSelectPane() {
       }
       console.log("selectedTickers??", selectedTickers);
       if (selectedTickers.length == 0) {
-        hideChart();
+        hideChartPane();
       } else {
-        updateChart(selectedTickers);
+        updateChartPane(selectedTickers);
       }
     });
   });
@@ -160,21 +156,20 @@ function buildChartPane() {
   stockChart = buildStockChart();
 }
 
-function hideChart() {
-  // console.log("hideChart :: selectedTickers, ", selectedTickers);
+function hideChartPane() {
+  console.log("hideChartPane :: selectedTickers, ", selectedTickers);
   stockChart.hide();
 }
 
-function updateChart(tickerArr) {
-  console.log("updateChart :: tickerArr, ", tickerArr);
-  console.log("updateChart :: selectedTickers, ", selectedTickers);
+function updateChartPane(pTickers) {
+  console.log("updateChartPane :: pTickers, ", pTickers);
+  console.log("updateChartPane :: selectedTickers, ", selectedTickers);
   if (!stockChart) buildChartPane();
-  if ((tickerArr.length = 1)) {
-    stockChart.redraw(tickerArr[0]);
+  if ((pTickers.length = 1)) {
+    stockChart.redraw(pTickers);
   } else {
-    alert(tickerArr.length + " tickers selected");
+    alert(pTickers.length + " tickers selected");
   }
-  // console.log("updateChart :: stockChart?? ", stockChart);
 }
 
 // function buildStockChart(pTicker = "AAPL") {
@@ -186,64 +181,29 @@ function buildStockChart(pTickers = [tickers[0]]) {
   let stockPCChart = {};
   //TODO, temporary
   let selectedData, selectedIndex, selectedColor, selectedTicker;
-  stockPCChart.hide = function () {
-    console.log("stockPCChart.hide");
-    hideInfo();
-    hideChart();
-  };
-  stockPCChart.update = function () {
-    console.log("stockPCChart.update");
-    //TODO: temporary
-    selectedData = dataByTicker.get(tickers[selectedIndex]);
-    updateInfo();
-    updateChart();
-  };
-  stockPCChart.redraw = function (ticker) {
-    console.log("stockPCChart.redraw");
-    selectedIndex = tickers.indexOf(ticker);
-    selectedTicker = ticker;
-    selectedColor = colors[selectedIndex];
-    selectedData = dataByTicker.get(tickers[selectedIndex]);
-    const transition = false;
-    showInfo();
-    showChart();
-    updateInfo();
-    updateChart(transition);
-  };
-
-  /*
-  // let selectedIndex, selectedTicker, selectedColor, selectedData;
-  // selectedIndex = tickers.indexOf(pTicker);
-  // selectedTicker = pTicker;
-  // selectedColor = colors[selectedIndex];
-  // selectedData = dataByTicker.get(tickers[selectedIndex]);
-  // updateInfo();
-  */
   let dataArr;
   let infoHolders;
   let tickerInfos, tickerBlocks, prices;
   let changeInfos, percents, values;
-  buildInfo();
-  function buildInfo() {
+  buildInfo(pTickers);
+  function buildInfo(pTickers) {
     console.log("buildStockChart, buildInfo");
-    //-----------------------------//
-    //-------- build info ---------//
-    //-----------------------------//
-    chartDiv = contentDiv.appendChild(document.createElement("div"));
-    // chartDiv.setAttribute("id", "chartDiv");
-    chartDiv.setAttribute("class", "chartDiv");
-    chartDiv.innerHTML = `
-    <div class="chartHolder" id="chartHolder"></div>
-    <div class="indicationHolder" id="indicationHolder">
-    </div>
-  `;
-    chartHolder = document.getElementById("chartHolder");
-    indicationHolder = document.getElementById("indicationHolder");
+    if (!chartDiv) {
+      chartDiv = contentDiv.appendChild(document.createElement("div"));
+      chartDiv.setAttribute("class", "chartDiv");
+      chartDiv.innerHTML = `
+        <div class="chartHolder" id="chartHolder"></div>
+        <div class="indicationHolder" id="indicationHolder">
+        </div>
+      `;
+      chartHolder = document.getElementById("chartHolder");
+      indicationHolder = document.getElementById("indicationHolder");
+    }
     indicationHolder.innerHTML = pTickers
       .map(
         (ticker) => `<div class="infoHolder">
-        <div class="ticker-info">
-          <div class="block"></div>
+        <div class="ticker-info" style="color: ${colorsByTicker[ticker]}">
+          <div class="block" style="background-color: ${colorsByTicker[ticker]}"></div>
           <div class="category">
               <div class="ticker">${ticker}</div>
               <div class="price">$100.00</div>
@@ -264,25 +224,27 @@ function buildStockChart(pTickers = [tickers[0]]) {
     changeInfos = chartDiv.querySelectorAll(".change-info");
     percents = chartDiv.querySelectorAll(".change-info .percent");
     values = chartDiv.querySelectorAll(".change-info .value");
-    updateInfo();
+    updateInfo(pTickers);
   }
-  function updateInfo() {
-    console.log("buildStockChart, updateInfo");
+  function updateInfo(pTickers) {
+    console.log("buildStockChart, updateInfo, pTickers? ", pTickers);
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
     const lastIndex = dataArr[0].length - 1;
     //-- for each ticker
     pTickers.map((ticker, i) => {
+      console.log("buildStockChart, updateInfo, i? ", i);
       const priceChange = dataArr[i][lastIndex].priceChange;
       const percentChange = dataArr[i][lastIndex].percentChange;
       let sign = priceChange == 0 ? "" : "+";
+      // console.log("changeInfos?? ", changeInfos);
       changeInfos[i].style.color = upColor;
       if (priceChange < 0) {
         sign = "-";
         changeInfos[i].style.color = downColor;
       }
       infoHolders[i].style.top = 60 * i + "px";
-      tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
-        colors[i];
+      // tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
+      //   colors[i];
       prices[i].textContent =
         "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
       percents[i].innerHTML = `${sign}${Math.abs(
@@ -290,28 +252,6 @@ function buildStockChart(pTickers = [tickers[0]]) {
       )}`;
       values[i].textContent = sign + "$" + Math.abs(priceChange);
     });
-
-    // //-- ticker info color change
-    // tickerInfo.style.color = selectedColor;
-    // tickerBlock.style.backgroundColor = selectedColor;
-    // //-- calculate priceChange and percentChange
-    // const lastIndex = selectedData.length - 1;
-    // const lastPrice = Math.round(selectedData[lastIndex].price * 100) / 100;
-    // const priceChange = selectedData[lastIndex].priceChange;
-    // const percentChange = selectedData[lastIndex].percentChange;
-    // let sign = priceChange == 0 ? "" : "+";
-    // changeInfo.style.color = upColor;
-    // if (priceChange < 0) {
-    //   sign = "-";
-    //   changeInfo.style.color = downColor;
-    // }
-    // chartDiv.querySelector(".ticker").textContent = selectedTicker;
-    // indicationHolder.querySelector(".price").textContent = "$" + lastPrice;
-    // indicationHolder.querySelector(".percent").innerHTML = `${sign}${Math.abs(
-    //   percentChange
-    // )}<span>%</span>`;
-    // indicationHolder.querySelector(".value").textContent =
-    //   sign + "$" + Math.abs(priceChange);
   }
   function showInfo() {
     console.log("buildStockChart, showInfo");
@@ -516,6 +456,32 @@ function buildStockChart(pTickers = [tickers[0]]) {
     //   updateChart();
     // });
   }
+
+  stockPCChart.hide = function () {
+    console.log("stockPCChart.hide");
+    hideInfo();
+    hideChart();
+  };
+  stockPCChart.update = function () {
+    console.log("stockPCChart.update");
+    //TODO: temporary
+    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    updateInfo();
+    updateChart();
+  };
+  stockPCChart.redraw = function (pTickers) {
+    console.log("stockPCChart.redraw");
+    //TODO: temporary
+    selectedTicker = pTickers[0];
+    selectedIndex = tickers.indexOf(selectedTicker);
+    selectedColor = colors[selectedIndex];
+    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    const transition = false;
+    showInfo();
+    showChart();
+    buildInfo(pTickers);
+    updateChart(transition);
+  };
 
   return stockPCChart;
 }
