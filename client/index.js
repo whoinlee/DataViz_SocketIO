@@ -165,11 +165,7 @@ function updateChartPane(pTickers) {
   console.log("updateChartPane :: pTickers, ", pTickers);
   console.log("updateChartPane :: selectedTickers, ", selectedTickers);
   if (!stockChart) buildChartPane();
-  if ((pTickers.length = 1)) {
-    stockChart.redraw(pTickers);
-  } else {
-    alert(pTickers.length + " tickers selected");
-  }
+  stockChart.redraw(pTickers);
 }
 
 // function buildStockChart(pTicker = "AAPL") {
@@ -187,7 +183,7 @@ function buildStockChart(pTickers = [tickers[0]]) {
   let changeInfos, percents, values;
   buildInfo(pTickers);
   function buildInfo(pTickers) {
-    console.log("buildStockChart, buildInfo");
+    console.log("buildStockChart, buildInfo, pTickers ??", pTickers);
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
       chartDiv.setAttribute("class", "chartDiv");
@@ -470,17 +466,17 @@ function buildStockChart(pTickers = [tickers[0]]) {
     updateChart();
   };
   stockPCChart.redraw = function (pTickers) {
-    console.log("stockPCChart.redraw");
+    console.log("stockPCChart.redraw, pTickers?? ", pTickers);
     //TODO: temporary
     selectedTicker = pTickers[0];
     selectedIndex = tickers.indexOf(selectedTicker);
     selectedColor = colors[selectedIndex];
     selectedData = dataByTicker.get(tickers[selectedIndex]);
     const transition = false;
-    showInfo();
-    showChart();
     buildInfo(pTickers);
+    showInfo();
     updateChart(transition);
+    showChart();
   };
 
   return stockPCChart;
