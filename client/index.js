@@ -69,7 +69,7 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  // console.log("Change", data);
+  console.log("Change", data);
   /*
   {timestamp: 1638883200000, changes: Array(3)}
     changes: Array(3)
@@ -100,9 +100,9 @@ socket.on("market events", function (data) {
       });
     });
 
-    // if (stockChart.update) {
-    //   stockChart.update();
-    // }
+    if (stockChart) {
+      stockChart.update(selectedTickers);
+    }
   }
 });
 socket.on("start new day", function (data) {
@@ -150,11 +150,11 @@ function buildSelectPane() {
   });
 }
 
-function buildChartPane() {
-  console.log("buildChartPane :: selectedTickers, ", selectedTickers);
-  if (selectedTickers.length == 0) selectedTickers = [tickers[0]];
-  stockChart = buildStockChart();
-}
+// function buildChartPane() {
+//   console.log("buildChartPane :: selectedTickers, ", selectedTickers);
+//   if (selectedTickers.length == 0) selectedTickers = [tickers[0]];
+//   stockChart = buildStockChart();
+// }
 
 function hideChartPane() {
   console.log("hideChartPane :: selectedTickers, ", selectedTickers);
@@ -164,11 +164,12 @@ function hideChartPane() {
 function updateChartPane(pTickers) {
   console.log("updateChartPane :: pTickers, ", pTickers);
   console.log("updateChartPane :: selectedTickers, ", selectedTickers);
-  if (!stockChart) buildChartPane();
+  if (!stockChart) {
+    stockChart = buildStockChart(pTickers);
+  }
   stockChart.redraw(pTickers);
 }
 
-// function buildStockChart(pTicker = "AAPL") {
 function buildStockChart(pTickers = [tickers[0]]) {
   console.log("buildStockChart, pTickers?? ", pTickers);
   const chartTypes = ["price", "change"];
@@ -179,10 +180,10 @@ function buildStockChart(pTickers = [tickers[0]]) {
   let selectedData, selectedIndex, selectedColor, selectedTicker;
   let dataArr;
   let infoHolders;
-  let tickerInfos, tickerBlocks, prices;
+  let prices;
   let changeInfos, percents, values;
   buildInfo(pTickers);
-  function buildInfo(pTickers) {
+  function buildInfo(pTickers = pTickers) {
     console.log("buildStockChart, buildInfo, pTickers ??", pTickers);
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
@@ -214,15 +215,13 @@ function buildStockChart(pTickers = [tickers[0]]) {
       .join("");
 
     infoHolders = chartDiv.querySelectorAll(".infoHolder");
-    tickerInfos = chartDiv.querySelectorAll(".ticker-info");
-    tickerBlocks = chartDiv.querySelectorAll(".ticker-info .block");
     prices = chartDiv.querySelectorAll(".ticker-info .category .price");
     changeInfos = chartDiv.querySelectorAll(".change-info");
     percents = chartDiv.querySelectorAll(".change-info .percent");
     values = chartDiv.querySelectorAll(".change-info .value");
     updateInfo(pTickers);
   }
-  function updateInfo(pTickers) {
+  function updateInfo(pTickers = pTickers) {
     console.log("buildStockChart, updateInfo, pTickers? ", pTickers);
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
     const lastIndex = dataArr[0].length - 1;
@@ -230,17 +229,13 @@ function buildStockChart(pTickers = [tickers[0]]) {
     pTickers.map((ticker, i) => {
       console.log("buildStockChart, updateInfo, i? ", i);
       const priceChange = dataArr[i][lastIndex].priceChange;
-      const percentChange = dataArr[i][lastIndex].percentChange;
       let sign = priceChange == 0 ? "" : "+";
-      // console.log("changeInfos?? ", changeInfos);
       changeInfos[i].style.color = upColor;
       if (priceChange < 0) {
         sign = "-";
         changeInfos[i].style.color = downColor;
       }
       infoHolders[i].style.top = 60 * i + "px";
-      // tickerInfos[i].style.color = tickerBlocks[i].style.backgroundColor =
-      //   colors[i];
       prices[i].textContent =
         "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
       percents[i].innerHTML = `${sign}${Math.abs(
@@ -273,10 +268,9 @@ function buildStockChart(pTickers = [tickers[0]]) {
   buildChart();
   function buildChart() {
     console.log("buildStockChart, buildChart");
-    //-----------------------------//
-    //-------- build chart --------//
-    //-----------------------------//
+
     //TODO: by chartType
+
     const selectedData = dataByTicker.get(tickers[0]);
     const selectedColor = colors[selectedIndex];
     svg = d3
@@ -431,50 +425,31 @@ function buildStockChart(pTickers = [tickers[0]]) {
     line.attr("visibility", "hidden");
   }
 
-  function buildTickerSelection() {
-    //-- build ticker select drop-down
-    // tickerSelection = chartDiv.appendChild(document.createElement("select"));
-    // tickerSelection.setAttribute("id", "tickerSelection");
-    // d3.select("#tickerSelection")
-    //   .selectAll("myOptions")
-    //   .data(tickers)
-    //   .enter()
-    //   .append("option")
-    //   .text((d) => d)
-    //   .attr("value", (d) => d);
-    // //-- on tickerSelection change, update chart
-    // d3.select("#tickerSelection").on("change", (e) => {
-    //   selectedIndex = e.target.selectedIndex;
-    //   selectedTicker = tickers[selectedIndex];
-    //   selectedColor = colors[selectedIndex];
-    //   selectedData = dataByTicker.get(tickers[selectedIndex]);
-    //   updateInfo();
-    //   updateChart();
-    // });
-  }
-
   stockPCChart.hide = function () {
     console.log("stockPCChart.hide");
     hideInfo();
     hideChart();
   };
-  stockPCChart.update = function () {
-    console.log("stockPCChart.update");
-    //TODO: temporary
+  stockPCChart.update = function (pTickers = pTickers) {
+    //TODO: temporary, onChange event
+    console.log("stockPCChart.update, pTickers?? ", pTickers);
+
+    updateInfo(pTickers);
+    //TODO: temporary, onChange event
+    console.log("stockPCChart.update, selectedIndex ??", selectedIndex);
     selectedData = dataByTicker.get(tickers[selectedIndex]);
-    updateInfo();
     updateChart();
   };
-  stockPCChart.redraw = function (pTickers) {
+  stockPCChart.redraw = function (pTickers = pTickers) {
     console.log("stockPCChart.redraw, pTickers?? ", pTickers);
+    buildInfo(pTickers);
+    showInfo();
     //TODO: temporary
     selectedTicker = pTickers[0];
     selectedIndex = tickers.indexOf(selectedTicker);
     selectedColor = colors[selectedIndex];
     selectedData = dataByTicker.get(tickers[selectedIndex]);
     const transition = false;
-    buildInfo(pTickers);
-    showInfo();
     updateChart(transition);
     showChart();
   };
