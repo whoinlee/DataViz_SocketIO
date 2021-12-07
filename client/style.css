@@ -5,7 +5,7 @@
   --vline-color: #dddddd;
   --hline-color: #888888;
   --origin-color: #000000;
-  --primary-color: black;
+  --primary-color: #000000;
   /* font sizes */
   --time-font-size: 13px; /* New Cycle, regular */
   --percent-font-size: 24px; /* New Cycle, bold */
@@ -188,6 +188,7 @@ h1 {
 
 .xAxis .tick text {
   font-size: var(--time-font-size);
+  font-weight: var(--regular);
 }
 
 .yAxis .tick text {

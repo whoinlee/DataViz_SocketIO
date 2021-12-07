@@ -46,13 +46,17 @@ csv("/market-history", col, (error, data) => {
     return;
   }
 
-  contentDiv.textContent = ""; //-- clear 'loading' msg
-  dataWithChanges = [];
+  //-- data w. addtional priceChange and percentChange columns
+  dataWithChanges = data;
+
+  //-- clear 'loading' msg
+  contentDiv.textContent = "";
 
   //-- group data by ticker
   dataByTicker = d3.group(data, (d) => d.ticker);
+
   //-- set priceChange and percentChange columns
-  tickers.map((currTicker) => {
+  tickers.forEach((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     const firstPrice = dataArr[0].price;
     dataArr.forEach((item) => {
@@ -60,9 +64,8 @@ csv("/market-history", col, (error, data) => {
       item.percentChange =
         Math.round(((item.price - firstPrice) / firstPrice) * 10000) / 100;
     });
-    dataWithChanges = [...dataWithChanges, ...dataArr];
   });
-  console.log("dataWithChanges???????", dataWithChanges);
+
   buildSelectPane();
 });
 
@@ -224,7 +227,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
         "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
       percents[i].innerHTML = `${sign}${Math.abs(
         dataArr[i][lastIndex].percentChange
-      )}`;
+      )}<span>%</span>`;
       values[i].textContent = sign + "$" + Math.abs(priceChange);
     });
   }
@@ -259,6 +262,8 @@ function buildChartPane(pTickers = [tickers[0]]) {
       .append("svg")
       .attr("width", width)
       .attr("height", height)
+      // .attr("viewBox", [0, 0, width, height])
+      // .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
       .append("g");
 
     let selectedTicker, selectedData, selectedColor;
@@ -270,7 +275,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
       selectedTicker = pTickers[0];
       selectedData = dataByTicker.get(selectedTicker);
       selectedColor = colorMapping(selectedTicker);
-      console.log("selectedColor???", selectedColor);
+      // console.log("selectedColor???", selectedColor);
 
       // svg = d3
       //   .select("#chartHolder")
@@ -386,18 +391,18 @@ function buildChartPane(pTickers = [tickers[0]]) {
       );
       selectedData = dataByTicker.get(selectedTicker);
       selectedColor = colorMapping(selectedTicker);
-      let percentChangeData = [];
-      pTickers.map((ticker) => {
-        const dataArrByTicker = dataByTicker.get(ticker);
-        // console.log("dataArrByTicker??", dataArrByTicker);
-        let percentChangeArr = dataArrByTicker.map(
-          (item) => item.percentChange
-        );
-        // console.log("percentChangeArr??", percentChangeArr);
-        percentChangeData = [...percentChangeData, ...percentChangeArr];
-      });
-      percentChangeData.sort();
-      console.log("percentChangeData???", percentChangeData);
+      // let percentChangeData = [];
+      // pTickers.map((ticker) => {
+      //   const dataArrByTicker = dataByTicker.get(ticker);
+      //   // console.log("dataArrByTicker??", dataArrByTicker);
+      //   let percentChangeArr = dataArrByTicker.map(
+      //     (item) => item.percentChange
+      //   );
+      //   // console.log("percentChangeArr??", percentChangeArr);
+      //   percentChangeData = [...percentChangeData, ...percentChangeArr];
+      // });
+      // percentChangeData.sort();
+      // console.log("percentChangeData???", percentChangeData);
 
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
@@ -406,11 +411,11 @@ function buildChartPane(pTickers = [tickers[0]]) {
       //-- set ranges
       xScale = d3
         .scaleUtc()
-        .domain(d3.extent(selectedData, xValue))
+        .domain(d3.extent(dataWithChanges, xValue))
         .range([0, innerWidth]);
       yScale = d3
         .scaleLinear()
-        .domain(d3.extent(percentChangeData, yValue))
+        .domain(d3.extent(dataWithChanges, yValue))
         .range([innerHeight, 0]);
 
       //-- set grids :: vertical xGrid and horizontal yGrid
@@ -474,7 +479,12 @@ function buildChartPane(pTickers = [tickers[0]]) {
           `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
         );
       yAxis
-        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
+        .call(
+          d3
+            .axisRight(yScale)
+            .ticks(5)
+            .tickFormat((d) => d3.format("+.1f")(d) + "%")
+        )
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
