@@ -14,7 +14,7 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 
 //-- HTML elements
 const contentDiv = document.getElementById("content");
-let chartDiv, chartHolder, indicationHolder;
+let chartDiv, indicationHolder;
 
 //-- time related
 const formatTime = utcFormat("%H:%M");
@@ -22,18 +22,14 @@ const formatTime = utcFormat("%H:%M");
 //-- chart related
 const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
 const colors = ["#1f77b4", "#9467bd", "#ff7f02", "#8c564b"];
-const colorsByTicker = {
-  AAPL: "#1f77b4",
-  GOOGL: "#9467bd",
-  FB: "#ff7f02",
-  MSFT: "#8c564b",
-};
+const colorMapping = d3.scaleOrdinal(tickers, colors);
+const curve = d3.curveLinear;
 const upColor = "#2ca02c"; //-- green
 const downColor = "#d62728"; //-- red
 let stockChart;
 
 //-- data
-let orgData; //original data
+let dataWithChanges; //data w. additional columns of priceChange and percentChange
 let dataByTicker; //data map by ticker
 let selectedTickers = [];
 
@@ -51,7 +47,7 @@ csv("/market-history", col, (error, data) => {
   }
 
   contentDiv.textContent = ""; //-- clear 'loading' msg
-  orgData = data;
+  dataWithChanges = [];
 
   //-- group data by ticker
   dataByTicker = d3.group(data, (d) => d.ticker);
@@ -64,8 +60,9 @@ csv("/market-history", col, (error, data) => {
       item.percentChange =
         Math.round(((item.price - firstPrice) / firstPrice) * 10000) / 100;
     });
+    dataWithChanges = [...dataWithChanges, ...dataArr];
   });
-
+  console.log("dataWithChanges???????", dataWithChanges);
   buildSelectPane();
 });
 
@@ -178,14 +175,16 @@ function buildChartPane(pTickers = [tickers[0]]) {
         <div class="indicationHolder" id="indicationHolder">
         </div>
       `;
-      chartHolder = document.getElementById("chartHolder");
+      // chartHolder = document.getElementById("chartHolder");
       indicationHolder = document.getElementById("indicationHolder");
     }
     indicationHolder.innerHTML = pTickers
       .map(
         (ticker) => `<div class="infoHolder">
-        <div class="ticker-info" style="color: ${colorsByTicker[ticker]}">
-          <div class="block" style="background-color: ${colorsByTicker[ticker]}"></div>
+        <div class="ticker-info" style="color: ${colorMapping(ticker)}">
+          <div class="block" style="background-color: ${colorMapping(
+            ticker
+          )}"></div>
           <div class="category">
               <div class="ticker">${ticker}</div>
               <div class="price">$100.00</div>
@@ -241,19 +240,10 @@ function buildChartPane(pTickers = [tickers[0]]) {
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
   let svg, line, linesByTicker;
-  let xScale,
-    yScale,
-    xValue,
-    yValue,
-    xGrid,
-    yGrid,
-    xGridG,
-    yGridG,
-    xAxisB,
-    xAxisT,
-    yAxis;
+  let xScale, yScale, zScale, xValue, yValue, zValue;
+  let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   //TODO, temporary
-  let selectedData, selectedIndex, selectedColor, selectedTicker;
+  let selectedData, selectedColor, selectedTicker;
   let dataArr;
   buildChart(chartType);
 
@@ -271,8 +261,6 @@ function buildChartPane(pTickers = [tickers[0]]) {
       .attr("height", height)
       .append("g");
 
-    //TODO: by chartType
-
     let selectedTicker, selectedData, selectedColor;
     const buildPriceChart = () => {
       //-- TODO
@@ -281,7 +269,9 @@ function buildChartPane(pTickers = [tickers[0]]) {
       //-- TODO
       selectedTicker = pTickers[0];
       selectedData = dataByTicker.get(selectedTicker);
-      selectedColor = colorsByTicker[selectedTicker];
+      selectedColor = colorMapping(selectedTicker);
+      console.log("selectedColor???", selectedColor);
+
       // svg = d3
       //   .select("#chartHolder")
       //   .append("svg")
@@ -376,6 +366,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
           "d",
           d3
             .line()
+            .curve(curve)
             .x((d) => xScale(d.timestamp))
             .y((d) => yScale(d.price))
         )
@@ -394,7 +385,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
         selectedTicker
       );
       selectedData = dataByTicker.get(selectedTicker);
-      selectedColor = colorsByTicker[selectedTicker];
+      selectedColor = colorMapping(selectedTicker);
       let percentChangeData = [];
       pTickers.map((ticker) => {
         const dataArrByTicker = dataByTicker.get(ticker);
@@ -410,6 +401,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
 
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
+      zValue = (d) => d["ticker"];
 
       //-- set ranges
       xScale = d3
@@ -643,8 +635,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
 
     updateInfo(pTickers);
     //TODO: temporary, onChange event
-    console.log("stockPCChart.update, selectedIndex ??", selectedIndex);
-    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    selectedData = dataByTicker.get(selectedTicker);
     //-- update current chart on "market change" event
     updateChart();
   };
@@ -654,9 +645,8 @@ function buildChartPane(pTickers = [tickers[0]]) {
     showInfo();
     //TODO: temporary
     selectedTicker = pTickers[0];
-    selectedIndex = tickers.indexOf(selectedTicker);
-    selectedColor = colors[selectedIndex];
-    selectedData = dataByTicker.get(tickers[selectedIndex]);
+    selectedColor = colorMapping(selectedTicker);
+    selectedData = dataByTicker.get(selectedTicker);
     const transition = false;
 
     updateChart(transition, pTickers);
