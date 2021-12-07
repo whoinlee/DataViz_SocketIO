@@ -48,12 +48,13 @@ csv("/market-history", col, (error, data) => {
 
   //-- data w. addtional priceChange and percentChange columns
   dataWithChanges = data;
+  console.log("typeof(dataWithChanges)", dataWithChanges);
 
   //-- clear 'loading' msg
   contentDiv.textContent = "";
 
   //-- group data by ticker
-  dataByTicker = d3.group(data, (d) => d.ticker);
+  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
 
   //-- set priceChange and percentChange columns
   tickers.forEach((currTicker) => {
@@ -149,18 +150,18 @@ function buildSelectPane() {
       } else {
         selectedTickers.splice(selectedTickers.indexOf(selectedTicker), 1);
       }
-      console.log("selectedTickers??", selectedTickers);
+      // console.log("selectedTickers??", selectedTickers);
       if (selectedTickers.length == 0) {
         hideChartPane();
       } else {
-        updateChartPane(selectedTickers);
+        redrawChartPane(selectedTickers);
       }
     });
   });
 }
 
-function buildChartPane(pTickers = [tickers[0]]) {
-  console.log("buildChartPane, pTickers?? ", pTickers);
+function buildChartPane(pTickers) {
+  console.log("buildChartPane, pTickers ?? ", pTickers);
 
   let stockPCChart = {};
   let infoHolders;
@@ -242,16 +243,17 @@ function buildChartPane(pTickers = [tickers[0]]) {
 
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
-  let svg, line, linesByTicker;
+  let svg, line, lines;
   let xScale, yScale, zScale, xValue, yValue, zValue;
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   //TODO, temporary
   let selectedData, selectedColor, selectedTicker;
   let dataArr;
-  buildChart(chartType);
+  buildChart(pTickers);
 
-  function buildChart(pChartType = chartType) {
-    console.log("buildChartPane:: buildChart, pChartType ?? ", pChartType);
+  function buildChart(pTickers = pTickers) {
+    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
+    if (pTickers.length < 1) return;
 
     if (svg) {
       d3.selectAll("svg").remove();
@@ -268,21 +270,10 @@ function buildChartPane(pTickers = [tickers[0]]) {
 
     let selectedTicker, selectedData, selectedColor;
     const buildPriceChart = () => {
-      //-- TODO
-      // d3.selectAll("svg > *").remove();
-
-      //-- TODO
       selectedTicker = pTickers[0];
       selectedData = dataByTicker.get(selectedTicker);
       selectedColor = colorMapping(selectedTicker);
-      // console.log("selectedColor???", selectedColor);
 
-      // svg = d3
-      //   .select("#chartHolder")
-      //   .append("svg")
-      //   .attr("width", width)
-      //   .attr("height", height)
-      //   .append("g");
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["price"];
 
@@ -361,7 +352,8 @@ function buildChartPane(pTickers = [tickers[0]]) {
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
-      if (line) line.remove();
+      if (lines) lines.forEach((line) => line.remove());
+      lines = [];
       line = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
@@ -378,35 +370,16 @@ function buildChartPane(pTickers = [tickers[0]]) {
         .attr("stroke", selectedColor)
         .style("stroke-width", 2)
         .style("fill", "none");
+      lines = [line];
     };
     const buildChangeChart = () => {
       console.log(
         "buildChartPane:: buildChangeChart, building comparison chart !!!!!!!!!!!!!!"
       );
 
-      selectedTicker = pTickers[0];
-      console.log(
-        "buildChartPane:: buildChangeChart, selectedTicker?? ",
-        selectedTicker
-      );
-      selectedData = dataByTicker.get(selectedTicker);
-      selectedColor = colorMapping(selectedTicker);
-      // let percentChangeData = [];
-      // pTickers.map((ticker) => {
-      //   const dataArrByTicker = dataByTicker.get(ticker);
-      //   // console.log("dataArrByTicker??", dataArrByTicker);
-      //   let percentChangeArr = dataArrByTicker.map(
-      //     (item) => item.percentChange
-      //   );
-      //   // console.log("percentChangeArr??", percentChangeArr);
-      //   percentChangeData = [...percentChangeData, ...percentChangeArr];
-      // });
-      // percentChangeData.sort();
-      // console.log("percentChangeData???", percentChangeData);
-
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
-      zValue = (d) => d["ticker"];
+      zValue = (d) => d["ticker"]; //TODO
 
       //-- set ranges
       xScale = d3
@@ -427,8 +400,11 @@ function buildChartPane(pTickers = [tickers[0]]) {
           .join("line")
           .attr("x1", (d) => xScale(d))
           .attr("x2", (d) => xScale(d))
-          .attr("y1", 0 + margin.top - 8) /* 8px extra long */
-          .attr("y2", height - margin.bottom + 8); /* 8px extra long */
+          .attr("y1", 0 + margin.top - 8) /* 8px extra long to the top */
+          .attr(
+            "y2",
+            height - margin.bottom + 8
+          ); /* 8px extra long to the bottom */
       yGrid = (g) =>
         g
           .attr("class", "hline")
@@ -436,7 +412,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
           .data(yScale.ticks(5))
           .join("line")
           .attr("x1", 0)
-          .attr("x2", innerWidth + 75) /* 75px extra wide */
+          .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
           .attr("y1", (d) => yScale(d))
           .attr("y2", (d) => yScale(d));
       xGridG = svg
@@ -488,44 +464,42 @@ function buildChartPane(pTickers = [tickers[0]]) {
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
-      // if (line) line.remove();
-      // line = svg
-      //   .append("g")
-      //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      //   .append("path")
-      //   .datum(selectedData)
-      //   .attr(
-      //     "d",
-      //     d3
-      //       .line()
-      //       .x((d) => xScale(d.timestamp))
-      //       .y((d) => yScale(d.percentChange))
-      //   )
-      //   .attr("stroke", "#ffcc00")
-      //   .style("stroke-width", 2)
-      //   .style("fill", "none");
+      if (lines) lines.forEach((line) => line.remove());
+      lines = [];
+      lines = pTickers.forEach((ticker) => {
+        svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`)
+          .append("path")
+          .datum(dataByTicker.get(ticker))
+          .attr(
+            "d",
+            d3
+              .line()
+              .x((d) => xScale(d.timestamp))
+              .y((d) => yScale(d.percentChange))
+          )
+          .attr("stroke", colorMapping(ticker))
+          .style("stroke-width", 2)
+          .style("fill", "none");
+      });
     };
 
-    if (pChartType == "price") {
+    if (pTickers.length == 1) {
       buildPriceChart();
     } else {
       buildChangeChart();
     }
   }
-  function updateChart(transition = true, pTickers = pTickers) {
-    console.log("buildChartPane, updateChart, pTickers?? ", pTickers);
-    console.log("buildChartPane, updateChart, 1 chartType?? ", chartType);
-
-    if (pTickers.length > 1 && chartType == "price") {
-      chartType = "change";
-      //TODO
-      buildChart("change");
-    }
-
-    console.log("buildChartPane, updateChart, 2 chartType?? ", chartType);
+  function updateChart(transition = true, pChartType, pTickers) {
+    console.log("buildChartPane, updateChart, pChartType?? ", pChartType);
 
     const updatePriceChart = () => {
       console.log("buildChartPane, updatePriceChart");
+      selectedTicker = pTickers[0];
+      selectedColor = colorMapping(selectedTicker);
+      selectedData = dataByTicker.get(selectedTicker);
+      console.log("buildChartPane, selectedData", selectedData);
       //-- update scales
       xScale = d3
         .scaleUtc()
@@ -552,8 +526,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
         .call((g) => g.select(".domain").remove());
 
       //-- update graph line
-      // line.remove();
-      line
+      lines[0]
         .datum(selectedData)
         .transition()
         .duration(500)
@@ -611,7 +584,7 @@ function buildChartPane(pTickers = [tickers[0]]) {
       //   );
     };
 
-    if (chartType == "price") {
+    if (pChartType == "price") {
       updatePriceChart();
     } else {
       updateChangeChart();
@@ -619,13 +592,32 @@ function buildChartPane(pTickers = [tickers[0]]) {
 
     // if (transition) line.transition().duration(500);
   }
+  function redrawChart(transition = true, pTickers = pTickers) {
+    console.log("buildChartPane, redrawChart, pTickers?? ", pTickers);
+    console.log("buildChartPane, redrawChart, 1 chartType?? ", chartType);
+
+    if (pTickers.length > 1 && chartType == "price") {
+      chartType = "change";
+      buildChart(pTickers);
+    }
+
+    if (pTickers.length == 1 && chartType == "change") {
+      chartType = "price";
+      buildChart(pTickers);
+    }
+
+    console.log("buildChartPane, updateChart, 2 chartType?? ", chartType);
+    updateChart(transition, chartType, pTickers);
+
+    // if (transition) line.transition().duration(500);
+  }
   function showChart() {
     console.log("buildChartPane, showChart");
-    line.attr("visibility", "visible");
+    lines.forEach((line) => line.attr("visibility", "visible"));
   }
   function hideChart() {
     console.log("buildChartPane, hideChart");
-    line.attr("visibility", "hidden");
+    lines.forEach((line) => line.attr("visibility", "hidden"));
   }
 
   stockPCChart.show = function () {
@@ -647,19 +639,23 @@ function buildChartPane(pTickers = [tickers[0]]) {
     //TODO: temporary, onChange event
     selectedData = dataByTicker.get(selectedTicker);
     //-- update current chart on "market change" event
-    updateChart();
+
+    //TODO params need to be updated
+    // updateChart();
   };
   stockPCChart.redraw = function (pTickers = pTickers) {
     console.log("stockPCChart.redraw, pTickers?? ", pTickers);
     buildInfo(pTickers);
     showInfo();
     //TODO: temporary
-    selectedTicker = pTickers[0];
-    selectedColor = colorMapping(selectedTicker);
-    selectedData = dataByTicker.get(selectedTicker);
-    const transition = false;
+    // selectedTicker = pTickers[0];
+    // selectedColor = colorMapping(selectedTicker);
+    // selectedData = dataByTicker.get(selectedTicker);
 
-    updateChart(transition, pTickers);
+    //TODO
+    const transition = false;
+    // updateChart(transition, pTickers);
+    redrawChart(transition, pTickers);
     showChart();
   };
   stockPCChart.hideChartByTicker = function (pTicker) {
@@ -672,13 +668,13 @@ function buildChartPane(pTickers = [tickers[0]]) {
   return stockPCChart;
 }
 
-function updateChartPane(pTickers) {
-  console.log("updateChartPane :: pTickers, ", pTickers);
-  console.log("updateChartPane :: selectedTickers, ", selectedTickers);
+function redrawChartPane(pTickers) {
+  console.log("redrawChartPane :: pTickers, ", pTickers);
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
+  } else {
+    stockChart.redraw(pTickers);
   }
-  stockChart.redraw(pTickers);
 }
 
 function hideChartPane() {
