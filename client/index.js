@@ -48,7 +48,6 @@ csv("/market-history", col, (error, data) => {
 
   //-- data w. addtional priceChange and percentChange columns
   dataWithChanges = data;
-  console.log("typeof(dataWithChanges)", dataWithChanges);
 
   //-- clear 'loading' msg
   contentDiv.textContent = "";
@@ -73,23 +72,25 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  //-- TODO
-  // console.log("Change", data);
-  /*
-  {timestamp: 1638883200000, changes: Array(3)}
-    changes: Array(3)
-      0: {ticker: 'AAPL', change: -0.0517}
-      1: {ticker: 'GOOGL', change: -0.2755}
-      2: {ticker: 'MSFT', change: 0.0393}
-    timestamp: 1638883200000
-  */
+  console.log("\nChange", data);
+
+  // if (dataByTicker.length == 0) {
+  //   console.log("???????? ever ????????");
+  //   return;
+  // }
 
   if (data.changes.length > 0) {
     const timestamp = data.timestamp + "";
     const changesArr = data.changes;
     tickers.map((currTicker) => {
-      let dataArr = dataByTicker.get(currTicker);
-      const firstPrice = dataArr[0].price;
+      let dataArr, firstPrice;
+      if (dataByTicker.length == 0) {
+        dataArr = [];
+        firstPrice = 0;
+      } else {
+        dataArr = dataByTicker.get(currTicker);
+        firstPrice = dataArr[0].price;
+      }
       let lastPrice =
         dataArr.length > 0 ? dataArr[dataArr.length - 1].price : 0;
       let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
@@ -113,28 +114,20 @@ socket.on("market events", function (data) {
       });
     });
 
-    //-- temporarily commented out
-    //-- TODO
     if (stockChart) {
-      // stockChart.update(selectedTickers);
       stockChart.update();
     }
   }
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
-  /*
-    {
-      "timestamp": 1489483800000,
-      "newDay": true
-    }
-  */
-  //-- reset dataByTicker;
+
+  //-- reset dataWithChanges & dataByTicker;
+  dataWithChanges.length = 0;
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     dataArr.length = 0;
   });
-  dataWithChanges.length = 0;
 });
 
 function buildSelectPane() {
@@ -157,7 +150,6 @@ function buildSelectPane() {
       } else {
         selectedTickers.splice(selectedTickers.indexOf(selectedTicker), 1);
       }
-      // console.log("selectedTickers??", selectedTickers);
       if (selectedTickers.length == 0) {
         hideChartPane();
       } else {
@@ -168,7 +160,7 @@ function buildSelectPane() {
 }
 
 function buildChartPane(pTickers) {
-  console.log("buildChartPane, pTickers ?? ", pTickers);
+  // console.log("buildChartPane, pTickers ?? ", pTickers);
 
   let stockPCChart = {};
   let infoHolders;
@@ -177,7 +169,8 @@ function buildChartPane(pTickers) {
   buildInfo(pTickers);
 
   function buildInfo(pTickers = selectedTickers) {
-    console.log("buildChartPane, buildInfo, pTickers ??", pTickers);
+    // console.log("buildChartPane, buildInfo, pTickers ??", pTickers);
+
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
       chartDiv.setAttribute("class", "chartDiv");
@@ -216,7 +209,7 @@ function buildChartPane(pTickers) {
     updateInfo(pTickers);
   }
   function updateInfo(pTickers = selectedTickers) {
-    console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
+    // console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     if (pTickers.length == 0 || !pTickers) return;
 
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
@@ -257,14 +250,11 @@ function buildChartPane(pTickers) {
   let dataArr;
   buildChart(pTickers);
 
-  function buildChart(pTickers = pTickers) {
-    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
+  function buildChart(pTickers = selectedTickers) {
+    // console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
     if (pTickers.length < 1) return;
 
-    if (svg) {
-      d3.selectAll("svg").remove();
-    }
-
+    if (svg) d3.selectAll("svg").remove();
     svg = d3
       .select("#chartHolder")
       .append("svg")
@@ -379,10 +369,6 @@ function buildChartPane(pTickers) {
       lines = [line];
     };
     const buildChangeChart = () => {
-      console.log(
-        "buildChartPane:: buildChangeChart, building comparison chart !!!!!!!!!!!!!!"
-      );
-
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
       zValue = (d) => d["ticker"]; //TODO
@@ -503,15 +489,13 @@ function buildChartPane(pTickers) {
     pChartType = chartType,
     pTickers = selectedTickers
   ) {
-    console.log("buildChartPane, updateChart, pChartType?? ", pChartType);
-
     const updatePriceChart = () => {
-      console.log("buildChartPane, updatePriceChart");
+      // console.log("buildChartPane :: updateChart, updatePriceChart");
+
       if (!pTickers[0]) return;
       selectedTicker = pTickers[0];
       selectedColor = colorMapping(selectedTicker);
       selectedData = dataByTicker.get(selectedTicker);
-      console.log("buildChartPane, selectedData", selectedData);
 
       //-- update scales
       xScale = d3
@@ -554,15 +538,7 @@ function buildChartPane(pTickers) {
     };
 
     const updateChangeChart = () => {
-      console.log(
-        "buildChartPane, updateChangeChart, dataWithChanges",
-        dataWithChanges
-      );
-
-      console.log(
-        "buildChartPane, updateChangeChart, dataByTicker",
-        dataByTicker
-      );
+      // console.log("buildChartPane :: updateChart, updateChangeChart");
 
       //-- update scales
       xScale = d3
@@ -613,6 +589,7 @@ function buildChartPane(pTickers) {
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
           .style("fill", "none");
+        // if (transition) line.transition().duration(500);
         lines.push(line);
       });
     };
@@ -622,13 +599,9 @@ function buildChartPane(pTickers) {
     } else {
       updateChangeChart();
     }
-
-    // if (transition) line.transition().duration(500);
   }
-  function redrawChart(transition = true, pTickers = pTickers) {
-    console.log("buildChartPane, redrawChart, pTickers?? ", pTickers);
-    console.log("buildChartPane, redrawChart, 1 chartType?? ", chartType);
 
+  function redrawChart(transition = true, pTickers = selectedTickers) {
     if (pTickers.length > 1 && chartType == "price") {
       chartType = "change";
       buildChart(pTickers);
@@ -639,73 +612,58 @@ function buildChartPane(pTickers) {
       buildChart(pTickers);
     }
 
-    console.log("buildChartPane, updateChart, 2 chartType?? ", chartType);
     updateChart(transition, chartType, pTickers);
-
-    // if (transition) line.transition().duration(500);
   }
   function showChart() {
-    console.log("buildChartPane, showChart, lines?", lines);
-    if (lines && lines.length > 0)
+    // console.log("buildChartPane, showChart, lines?", lines);
+
+    if (lines && lines.length > 0) {
       lines.forEach((line) => line.attr("visibility", "visible"));
+    }
+    const texts = document.getElementById("yAxisR").querySelectorAll("text");
+    texts.forEach((text) => (text.style.visibility = "visible"));
   }
   function hideChart() {
-    console.log("buildChartPane, hideChart, lines?", lines);
-    if (lines && lines.length > 0)
+    // console.log("buildChartPane, hideChart, lines?", lines);
+
+    if (lines && lines.length > 0) {
       lines.forEach((line) => line.attr("visibility", "hidden"));
+    }
+    const texts = document.getElementById("yAxisR").querySelectorAll("text");
+    texts.forEach((text) => (text.style.visibility = "hidden"));
   }
 
   stockPCChart.show = function () {
-    console.log("stockPCChart.show");
+    // console.log("stockPCChart.show");
     showInfo();
     showChart();
   };
   stockPCChart.hide = function () {
-    console.log("stockPCChart.hide");
+    // console.log("stockPCChart.hide");
     hideInfo();
     hideChart();
   };
-
-  // stockPCChart.update = function (pTickers = pTickers) {
   stockPCChart.update = function () {
-    //TODO: temporary, onChange event
-    console.log("stockPCChart.update, ever??????? pTickers?? ", pTickers);
-
+    // console.log("stockPCChart.update");
     updateInfo();
-    //TODO: temporary, onChange event
-    // selectedData = dataByTicker.get(selectedTicker);
-    //-- update current chart on "market change" event
-
-    //TODO params need to be updated
     updateChart();
   };
   stockPCChart.redraw = function (pTickers = pTickers) {
-    console.log("stockPCChart.redraw, pTickers?? ", pTickers);
+    // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
     buildInfo(pTickers);
     showInfo();
-    //TODO: temporary
-    // selectedTicker = pTickers[0];
-    // selectedColor = colorMapping(selectedTicker);
-    // selectedData = dataByTicker.get(selectedTicker);
 
-    //TODO
-    const transition = false;
-    // updateChart(transition, pTickers);
+    //TODO, transition?
+    const transition = true;
     redrawChart(transition, pTickers);
     showChart();
-  };
-  stockPCChart.hideChartByTicker = function (pTicker) {
-    console.log("stockPCChart.hideChartByTicker, pTicker?? ", pTicker);
-  };
-  stockPCChart.showChartByTicker = function (pTicker) {
-    console.log("stockPCChart.showChartByTicker, pTicker?? ", pTicker);
   };
 
   return stockPCChart;
 }
 
 function redrawChartPane(pTickers = selectedTickers) {
-  console.log("redrawChartPane :: pTickers, ", pTickers);
+  // console.log("redrawChartPane :: pTickers, ", pTickers);
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
   } else {
@@ -714,6 +672,6 @@ function redrawChartPane(pTickers = selectedTickers) {
 }
 
 function hideChartPane() {
-  console.log("hideChartPane :: selectedTickers, ", selectedTickers);
+  // console.log("hideChartPane :: selectedTickers, ");
   stockChart.hide();
 }
