@@ -352,7 +352,7 @@ function buildChartPane(pTickers) {
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
-      if (lines) lines.forEach((line) => line.remove());
+      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
       line = svg
         .append("g")
@@ -464,10 +464,10 @@ function buildChartPane(pTickers) {
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
-      if (lines) lines.forEach((line) => line.remove());
+      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
-      lines = pTickers.forEach((ticker) => {
-        svg
+      pTickers.forEach((ticker) => {
+        const line = svg
           .append("g")
           .attr("transform", `translate(${margin.left}, ${margin.top})`)
           .append("path")
@@ -482,6 +482,7 @@ function buildChartPane(pTickers) {
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
           .style("fill", "none");
+        lines.push(line);
       });
     };
 
@@ -541,7 +542,7 @@ function buildChartPane(pTickers) {
     };
 
     const updateChangeChart = () => {
-      console.log("buildChartPane, updateChangeChart --- not implemented yet");
+      console.log("buildChartPane, updateChangeChart");
 
       //-- update scales
       // xScale = d3
@@ -569,19 +570,28 @@ function buildChartPane(pTickers) {
       //   .call((g) => g.select(".domain").remove());
 
       //-- update graph line
-      // // line.remove();
-      // line
-      //   .datum(selectedData)
-      //   .transition()
-      //   .duration(500)
-      //   .attr("stroke", selectedColor)
-      //   .attr(
-      //     "d",
-      //     d3
-      //       .line()
-      //       .x((d) => xScale(d.timestamp))
-      //       .y((d) => yScale(d.price))
-      //   );
+      console.log("=====>lines? 1 ", lines);
+      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
+      lines = [];
+      pTickers.forEach((ticker) => {
+        const line = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`)
+          .append("path")
+          .datum(dataByTicker.get(ticker))
+          .attr(
+            "d",
+            d3
+              .line()
+              .x((d) => xScale(d.timestamp))
+              .y((d) => yScale(d.percentChange))
+          )
+          .attr("stroke", colorMapping(ticker))
+          .style("stroke-width", 2)
+          .style("fill", "none");
+        lines.push(line);
+      });
+      console.log("=====>lines? 2 ", lines);
     };
 
     if (pChartType == "price") {
@@ -612,12 +622,14 @@ function buildChartPane(pTickers) {
     // if (transition) line.transition().duration(500);
   }
   function showChart() {
-    console.log("buildChartPane, showChart");
-    lines.forEach((line) => line.attr("visibility", "visible"));
+    console.log("buildChartPane, showChart, lines?", lines);
+    if (lines && lines.length > 0)
+      lines.forEach((line) => line.attr("visibility", "visible"));
   }
   function hideChart() {
-    console.log("buildChartPane, hideChart");
-    lines.forEach((line) => line.attr("visibility", "hidden"));
+    console.log("buildChartPane, hideChart, lines?", lines);
+    if (lines && lines.length > 0)
+      lines.forEach((line) => line.attr("visibility", "hidden"));
   }
 
   stockPCChart.show = function () {
