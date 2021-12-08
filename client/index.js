@@ -30,9 +30,9 @@ let stockChart;
 
 //-- data
 let dataWithChanges; //data w. additional columns of priceChange and percentChange
-let dataByTicker; //data obj by ticker, {"AAPL":[...], "GOOGL":[] ...}
-let selectedTickers = []; //current ticker selections
+let dataByTicker; //data map by ticker
 let lastDayData; //previous day's last data
+let selectedTickers = []; //current ticker selections
 
 //-- load historical data
 const col = (d) => {
@@ -46,8 +46,8 @@ csv("/market-history", col, (error, data) => {
     contentDiv.textContent = error.target.response;
     return;
   }
+  // console.log("data loaded!!!!!!!!!!!!!!");
 
-  console.log("data loaded!!!!!!!!!!!!!!");
   //-- data w. addtional priceChange and percentChange columns
   dataWithChanges = data;
 
@@ -78,6 +78,8 @@ socket.on("market events", function (data) {
 
   const timestamp = data.timestamp + "";
   const changesArr = data.changes;
+
+  //-- update history data w. additional data
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     let firstPrice =
@@ -101,12 +103,13 @@ socket.on("market events", function (data) {
   });
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
 
-  if (stockChart) stockChart.update();
+  //-- update chart w. additional data
+  updateChartPane();
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
 
-  //-- reset dataWithChanges & dataByTicker;
+  //-- reset data and save the lastDayData
   lastDayData = new Object();
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
@@ -139,13 +142,13 @@ function buildSelectPane() {
       if (selectedTickers.length == 0) {
         hideChartPane();
       } else {
-        updateChartPane(selectedTickers);
+        redrawChartPane(selectedTickers);
       }
     });
   });
 }
 
-function buildChartPane(pTickers) {
+function buildChartPane(pTickers = selectedTickers) {
   // console.log("buildChartPane, pTickers ?? ", pTickers);
 
   let stockPCChart = {};
@@ -353,13 +356,90 @@ function buildChartPane(pTickers) {
         .style("fill", "none");
       lines = [line];
 
-      // rule = svg.append("g");
+      // rule = svg.append("g").attr("class", "mouse-over-effects");
       // rule
-      //   .append("line")
+      //   .append("path")
+      //   .attr("class", "mouse-line")
       //   .attr("y1", margin.top)
       //   .attr("y2", height - margin.bottom)
-      //   .attr("stroke", "#000");
+      //   .attr("stroke", "#000")
+      //   .style("opacity", "0.75");
 
+      // var mousePerLine = rule
+      //   .selectAll(".mouse-per-line")
+      //   .data(selectedTicker)
+      //   .enter()
+      //   .append("g")
+      //   .attr("class", "mouse-per-line");
+
+      // mousePerLine
+      //   .append("circle")
+      //   .attr("r", 4)
+      //   .style("fill", selectedColor)
+      //   .style("opacity", "0");
+
+      // mousePerLine.append("text").attr("transform", "translate(10,3)");
+
+      // rule
+      //   .append("svg:rect") // append a rect to catch mouse movements on canvas
+      //   .attr("width", width) // can't catch mouse events on a g element
+      //   .attr("height", height)
+      //   .attr("fill", "none")
+      //   .attr("pointer-events", "all")
+      //   .on("mouseout", function () {
+      //     // on mouse out hide line, circles and text
+      //     d3.select(".mouse-line").style("opacity", "0");
+      //     d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+      //     d3.selectAll(".mouse-per-line text").style("opacity", "0");
+      //   })
+      //   .on("mouseover", function () {
+      //     // on mouse in show line, circles and text
+      //     d3.select(".mouse-line").style("opacity", "1");
+      //     d3.selectAll(".mouse-per-line circle").style("opacity", "1");
+      //     d3.selectAll(".mouse-per-line text").style("opacity", "1");
+      //   })
+      //   .on("mousemove", function () {
+      //     // mouse moving over canvas
+      //     var mouse = d3.mouse(this);
+      //     d3.select(".mouse-line").attr("d", function () {
+      //       var d = "M" + mouse[0] + "," + height;
+      //       d += " " + mouse[0] + "," + 0;
+      //       return d;
+      //     });
+
+      //     d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
+      //       console.log(width / mouse[0]);
+      //       var xDate = x.invert(mouse[0]),
+      //         bisect = d3.bisector(function (d) {
+      //           return d.date;
+      //         }).right;
+      //       idx = bisect(d.values, xDate);
+
+      //       var beginning = 0,
+      //         end = lines[i].getTotalLength(),
+      //         target = null;
+
+      //       while (true) {
+      //         target = Math.floor((beginning + end) / 2);
+      //         pos = lines[i].getPointAtLength(target);
+      //         if (
+      //           (target === end || target === beginning) &&
+      //           pos.x !== mouse[0]
+      //         ) {
+      //           break;
+      //         }
+      //         if (pos.x > mouse[0]) end = target;
+      //         else if (pos.x < mouse[0]) beginning = target;
+      //         else break; //position found
+      //       }
+
+      //       d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
+
+      //       return "translate(" + mouse[0] + "," + pos.y + ")";
+      //     });
+      //   }); //-- rule
+
+      //-- build a circle in the end of price line
       // const lastXValue = xScale(selectedData[selectedData.length - 1]);
       // const lastYValue = yScale(selectedData[selectedData.length - 1]);
       // circle = svg
@@ -371,7 +451,7 @@ function buildChartPane(pTickers) {
       //   .attr("r", 4)
       //   .style("fill", selectedColor);
       // circles = circle;
-    };
+    }; //buildPriceChart
     const buildChangeChart = () => {
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
@@ -475,6 +555,7 @@ function buildChartPane(pTickers) {
               .x((d) => xScale(d.timestamp))
               .y((d) => yScale(d.percentChange))
           )
+          .attr("class", "line")
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
           .style("fill", "none");
@@ -612,6 +693,7 @@ function buildChartPane(pTickers) {
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
           .style("fill", "none");
+
         // if (transition) line.transition().duration(500);
         lines.push(line);
 
@@ -646,23 +728,36 @@ function buildChartPane(pTickers) {
   function showChart() {
     // console.log("buildChartPane, showChart, lines?", lines);
 
-    if (lines && lines.length > 0) {
+    //-- price/change lines
+    if (lines && lines.length > 0)
       lines.forEach((line) => line.attr("visibility", "visible"));
-      // circles.forEach((circle) => circle.attr("visibility", "visible"));
-    }
+
+    //-- circles in the end of lines
+    if (circles && circles.length > 0)
+      circles.forEach((circle) => circle.attr("visibility", "visible"));
+
+    //-- vertical line that shows the infos of lines
     if (rule) rule.attr("visibility", "visible");
+
+    //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "visible"));
   }
   function hideChart() {
     // console.log("buildChartPane, hideChart, lines?", lines);
 
-    if (lines && lines.length > 0) {
+    //-- price/change lines
+    if (lines && lines.length > 0)
       lines.forEach((line) => line.attr("visibility", "hidden"));
 
-      // circles.forEach((circle) => circle.attr("visibility", "hidden"));
-    }
+    //-- circles in the end of lines
+    if (circles && circles.length > 0)
+      circles.forEach((circle) => circle.attr("visibility", "hidden"));
+
+    //-- vertical line that shows the infos of lines
     if (rule) rule.attr("visibility", "hidden");
+
+    //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "hidden"));
   }
@@ -684,6 +779,7 @@ function buildChartPane(pTickers) {
   };
   stockPCChart.redraw = function (pTickers = selectedTickers) {
     // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
+
     buildInfo(pTickers);
     showInfo();
 
@@ -696,8 +792,13 @@ function buildChartPane(pTickers) {
   return stockPCChart;
 }
 
-function updateChartPane(pTickers = selectedTickers) {
-  // console.log("updateChartPane :: pTickers, ", pTickers);
+function updateChartPane() {
+  if (stockChart) stockChart.update();
+}
+
+function redrawChartPane(pTickers = selectedTickers) {
+  console.log("redrawChartPane :: pTickers, ", pTickers);
+
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
   } else {
@@ -706,10 +807,6 @@ function updateChartPane(pTickers = selectedTickers) {
 }
 
 function hideChartPane() {
-  // console.log("hideChartPane :: selectedTickers, ");
   stockChart.hide();
-}
-
-function resetChartPane() {
-  //-- TODO
+  //-- TODO::destroy??
 }
