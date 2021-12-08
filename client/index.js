@@ -358,12 +358,50 @@ function buildChartPane(pTickers = selectedTickers) {
         .style("fill", "none");
       lines = [line];
 
+      //-- build a circle in the end of price line
+      console.log("1 circles??", circles);
+      if (circles && circles.length > 0) {
+        circles.forEach((circle) => circle.remove());
+        circles = [];
+      }
+      const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
+      const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
+      circle = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .append("circle");
+      circle
+        .attr("cx", lastXValue)
+        .attr("cy", lastYValue)
+        .attr("r", 5)
+        .attr("stroke", "#fff")
+        .style("stroke-width", 1)
+        .style("fill", selectedColor);
+      circles = [circle];
+
+      // circle = svg
+      //   .append("g")
+      //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
+      //   .append("circle");
+
+      rule = svg
+        .append("g")
+        .attr("id", "rule")
+        .attr("class", "mouse-over-effects")
+        .append("line")
+        .attr("class", "mouse-line")
+        .attr("y1", margin.top - 10)
+        .attr("y2", height - margin.bottom + 10)
+        .attr("stroke", "#ff0000")
+        .style("z-index", "10")
+        .style("stroke-width", "1")
+        .style("opacity", "1");
+
       // rule = svg.append("g").attr("class", "mouse-over-effects");
       // rule
       //   .append("path")
       //   .attr("class", "mouse-line")
-      //   .attr("y1", margin.top)
-      //   .attr("y2", height - margin.bottom)
+
       //   .attr("stroke", "#f00");
       // // .style("opacity", "1");
       // console.log("rule??", rule);
@@ -432,26 +470,6 @@ function buildChartPane(pTickers = selectedTickers) {
       //       return "translate(" + mouse[0] + "," + pos.y + ")";
       //     });
       //   }); //-- rule
-      //-- build a circle in the end of price line
-      console.log("1 circles??", circles);
-      if (circles && circles.length > 0) {
-        circles.forEach((circle) => circle.remove());
-        circles = [];
-      }
-      const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
-      const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      circle = svg
-        .append("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .append("circle");
-      circle
-        .attr("cx", lastXValue)
-        .attr("cy", lastYValue)
-        .attr("r", 5)
-        .attr("stroke", "#fff")
-        .style("stroke-width", 1)
-        .style("fill", selectedColor);
-      circles = [circle];
     } //buildPriceChart
 
     //-- build change chart
@@ -545,11 +563,11 @@ function buildChartPane(pTickers = selectedTickers) {
         )
         .call((g) => g.select(".domain").remove());
 
-      //-- draw a line
+      //-- draw lines and circles in the end of lines
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
-      lines = [];
       if (circles && circles.length > 0)
         circles.forEach((circle) => circle.remove());
+      lines = [];
       circles = [];
       pTickers.forEach((ticker) => {
         const line = svg
@@ -590,7 +608,21 @@ function buildChartPane(pTickers = selectedTickers) {
           .style("stroke-width", 1)
           .style("fill", colorMapping(ticker));
         circles.push(circle);
-      });
+      }); //pTickers.forEach
+
+      //-- draw a vertical line
+      rule = svg
+        .append("g")
+        .attr("id", "rule")
+        .attr("class", "mouse-over-effects")
+        .append("line")
+        .attr("class", "mouse-line")
+        .attr("y1", margin.top - 10)
+        .attr("y2", height - margin.bottom + 10)
+        .attr("stroke", "#ff0000")
+        .style("z-index", "10")
+        .style("stroke-width", "1")
+        .style("opacity", "1");
     }
 
     if (pTickers.length == 1) {
