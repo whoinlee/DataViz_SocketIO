@@ -807,7 +807,7 @@ function buildChartPane(pTickers = selectedTickers) {
       circles.forEach((circle) => circle.attr("visibility", "visible"));
 
     //-- vertical line that shows the infos of lines
-    // if (rule) rule.attr("visibility", "visible");
+    if (rule) rule.attr("visibility", "visible");
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
@@ -825,7 +825,7 @@ function buildChartPane(pTickers = selectedTickers) {
       circles.forEach((circle) => circle.attr("visibility", "hidden"));
 
     //-- vertical line that shows the infos of lines
-    // if (rule) rule.attr("visibility", "hidden");
+    if (rule) rule.attr("visibility", "hidden");
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
