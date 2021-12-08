@@ -443,9 +443,12 @@ function buildChartPane(pTickers = selectedTickers) {
       //   }); //-- rule
 
       //-- build a circle in the end of price line
-      if (circles && circles.length > 0)
+      console.log("1 circles??", circles);
+      if (circles && circles.length > 0) {
+        console.log("removing circles---------------------->");
         circles.forEach((circle) => circle.remove());
-      circles = [];
+        circles = [];
+      }
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
       circle = svg
@@ -458,6 +461,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("r", 4)
         .style("fill", selectedColor);
       circles = [circle];
+      console.log("2 circles??", circles);
     }; //buildPriceChart
     const buildChangeChart = () => {
       xValue = (d) => d["timestamp"];
@@ -597,7 +601,7 @@ function buildChartPane(pTickers = selectedTickers) {
     // console.log("updateChart :: ");
 
     const updatePriceChart = () => {
-      // console.log("buildChartPane :: updateChart, updatePriceChart");
+      console.log("buildChartPane :: updateChart, updatePriceChart");
 
       if (!pTickers[0]) return;
       selectedTicker = pTickers[0];
@@ -634,7 +638,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .datum(selectedData)
         .transition()
         .duration(500)
-        // .attr("stroke", selectedColor)
+        .attr("stroke", selectedColor)
         .attr(
           "d",
           d3
@@ -643,9 +647,14 @@ function buildChartPane(pTickers = selectedTickers) {
             .y((d) => yScale(d.price))
         );
 
+      //-- update the circle in the end of the graph line
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      circle.attr("cx", lastXValue).attr("cy", lastYValue);
+      console.log("circles[0] in the price update", circles[0]);
+      circles[0]
+        .style("fill", selectedColor)
+        .attr("cx", lastXValue)
+        .attr("cy", lastYValue);
     };
 
     const updateChangeChart = () => {
