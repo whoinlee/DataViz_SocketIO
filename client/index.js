@@ -231,11 +231,10 @@ function buildChartPane(pTickers = selectedTickers) {
 
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
-  let svg, line, lines, rule, circle, circles;
+  let svg, lines, rule, circles;
   let xScale, yScale, xValue, yValue;
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let zScale, zValue; //TODO
-  // let selectedData, selectedColor, selectedTicker;
   let dataArr;
   buildChart(pTickers);
 
@@ -339,34 +338,25 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- draw a price line
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
-      line = svg
+      const line = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("path")
         .datum(selectedData)
-        .attr(
-          "d",
-          d3
-            .line()
-            .curve(curve)
-            .x(xValue) //12/08
-            .y(yValue) //12/08
-        )
-        .attr("class", "line") //12/08
+        .attr("d", d3.line().curve(curve).x(xValue).y(yValue))
+        .attr("class", "line")
         .attr("stroke", selectedColor)
         .style("stroke-width", 2)
         .style("fill", "none");
       lines = [line];
 
       //-- build a circle in the end of price line
-      console.log("1 circles??", circles);
-      if (circles && circles.length > 0) {
+      if (circles && circles.length > 0)
         circles.forEach((circle) => circle.remove());
-        circles = [];
-      }
+      circles = [];
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      circle = svg
+      const circle = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("circle");
@@ -378,11 +368,6 @@ function buildChartPane(pTickers = selectedTickers) {
         .style("stroke-width", 1)
         .style("fill", selectedColor);
       circles = [circle];
-
-      // circle = svg
-      //   .append("g")
-      //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      //   .append("circle");
 
       rule = svg
         .append("g")
@@ -410,9 +395,10 @@ function buildChartPane(pTickers = selectedTickers) {
         .append("circle")
         .attr("r", 4)
         .style("fill", selectedColor)
-        .style("opacity", ".5");
+        .style("opacity", "1");
 
-      // mousePerLine.append("text").attr("transform", "translate(10,3)");
+      mousePerLine.append("text").attr("transform", "translate(10,3)");
+
       // rule
       //   .append("svg:rect") // append a rect to catch mouse movements on canvas
       //   .attr("width", width) // can't catch mouse events on a g element
@@ -440,7 +426,7 @@ function buildChartPane(pTickers = selectedTickers) {
       //       return d;
       //     });
       //     d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
-      //       console.log(width / mouse[0]);
+      //       // console.log(width / mouse[0]);
       //       var xDate = x.invert(mouse[0]),
       //         bisect = d3.bisector(function (d) {
       //           return d.date;
@@ -636,7 +622,7 @@ function buildChartPane(pTickers = selectedTickers) {
     pTickers = selectedTickers
   ) {
     const updatePriceChart = () => {
-      console.log("buildChartPane :: updateChart, updatePriceChart");
+      // console.log("buildChartPane :: updateChart, updatePriceChart");
 
       if (!pTickers[0]) return;
       let selectedTicker = pTickers[0];
@@ -832,16 +818,6 @@ function buildChartPane(pTickers = selectedTickers) {
     texts.forEach((text) => (text.style.visibility = "hidden"));
   } //hideChart
 
-  stockPCChart.show = function () {
-    // console.log("stockPCChart.show");
-    showInfo();
-    showChart();
-  }; //show
-  stockPCChart.hide = function () {
-    // console.log("stockPCChart.hide");
-    hideInfo();
-    hideChart();
-  }; //hide
   stockPCChart.update = function () {
     // console.log("stockPCChart.update");
     updateInfo();
@@ -858,6 +834,16 @@ function buildChartPane(pTickers = selectedTickers) {
     redrawChart(transition, pTickers);
     showChart();
   }; //redraw
+  stockPCChart.show = function () {
+    // console.log("stockPCChart.show");
+    showInfo();
+    showChart();
+  }; //show
+  stockPCChart.hide = function () {
+    // console.log("stockPCChart.hide");
+    hideInfo();
+    hideChart();
+  }; //hide
 
   return stockPCChart;
 } //buildChartPane
