@@ -66,13 +66,6 @@ csv("/market-history", col, (error, data) => {
       item.percentChange = ((item.price - firstPrice) / firstPrice) * 100;
     });
   });
-  console.log("dataWithChanges", dataWithChanges);
-  console.log("dataByTicker", dataByTicker);
-
-  const testData = [];
-  let dataByTest = d3.group(testData, (d) => d.ticker);
-  console.log("testData", testData);
-  console.log("dataByTest", dataByTest);
 
   buildSelectPane();
 });
@@ -85,14 +78,8 @@ socket.on("market events", function (data) {
 
   const timestamp = data.timestamp + "";
   const changesArr = data.changes;
-  // dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
-    if (dataArr.length == 0) {
-      console.log("RESTART");
-      console.log("dataWithChanges?? 2 ", dataWithChanges);
-      console.log("dataByTicker?? 2 ", dataByTicker);
-    }
     let firstPrice =
       dataArr.length > 0 ? dataArr[0].price : lastDayData[currTicker].price;
     let lastPrice =
@@ -101,7 +88,6 @@ socket.on("market events", function (data) {
         : lastDayData[currTicker].price;
     let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
     lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
-    console.log("lastPrice???", lastPrice);
     const priceChange = lastPrice - firstPrice;
     let percentChange =
       firstPrice == 0 ? 0 : ((lastPrice - firstPrice) / firstPrice) * 100;
@@ -112,45 +98,22 @@ socket.on("market events", function (data) {
       priceChange: priceChange,
       percentChange: percentChange,
     });
-    // if (dataArr.length == 0) dataByTicker =
-    // dataArr.push({
-    //   timestamp: timestamp,
-    //   ticker: currTicker,
-    //   price: lastPrice,
-    //   priceChange: priceChange,
-    //   percentChange: percentChange,
-    // });
-    if (dataArr.length == 1) {
-      console.log("dataWithChanges?? 3 ", dataWithChanges);
-      console.log("dataByTicker?? 3 ", dataByTicker);
-    }
   });
-
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
-  console.log("dataByTicker?? 4 ", dataByTicker);
 
   if (stockChart) stockChart.update();
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
-  console.log("=============>");
 
   //-- reset dataWithChanges & dataByTicker;
   lastDayData = new Object();
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     lastDayData[currTicker] = dataArr[dataArr.length - 1];
-    console.log("lastDayData[currTicker]", lastDayData[currTicker]);
     dataArr.length = 0;
   });
-
-  console.log("lastDayData", lastDayData);
-
   dataWithChanges = new Array();
-  // dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
-  console.log("dataWithChange", dataWithChanges);
-  console.log("dataByTicker", dataByTicker);
-  console.log("=============>");
 });
 
 function buildSelectPane() {
@@ -598,11 +561,7 @@ function buildChartPane(pTickers) {
     };
 
     const updateChangeChart = () => {
-      console.log("buildChartPane :: updateChart, updateChangeChart");
-      console.log(
-        "buildChartPane :: updateChart, dataWithChanges",
-        dataWithChanges
-      );
+      // console.log("buildChartPane :: updateChart, updateChangeChart");
 
       //-- update scales
       xScale = d3

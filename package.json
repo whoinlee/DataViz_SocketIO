@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Show us your data visualization development skillz",
   "scripts": {
-    "start": "EVENTS_TIMEOUT=1000 node server/index.js",
+    "start": "node server/index.js",
     "watch": "webpack --progress --colors --watch"
   },
   "dependencies": {
