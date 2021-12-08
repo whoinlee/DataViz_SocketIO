@@ -235,7 +235,7 @@ function buildChartPane(pTickers = selectedTickers) {
   let xScale, yScale, xValue, yValue;
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let zScale, zValue; //TODO
-  let selectedData, selectedColor, selectedTicker;
+  // let selectedData, selectedColor, selectedTicker;
   let dataArr;
   buildChart(pTickers);
 
@@ -253,11 +253,11 @@ function buildChartPane(pTickers = selectedTickers) {
       // .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
       .append("g");
 
-    let selectedTicker, selectedData, selectedColor;
-    const buildPriceChart = () => {
-      selectedTicker = pTickers[0];
-      selectedData = dataByTicker.get(selectedTicker);
-      selectedColor = colorMapping(selectedTicker);
+    //-- build price chart
+    function buildPriceChart() {
+      let selectedTicker = pTickers[0];
+      let selectedData = dataByTicker.get(selectedTicker);
+      let selectedColor = colorMapping(selectedTicker);
 
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["price"];
@@ -367,22 +367,18 @@ function buildChartPane(pTickers = selectedTickers) {
       //   .attr("stroke", "#f00");
       // // .style("opacity", "1");
       // console.log("rule??", rule);
-
       // var mousePerLine = rule
       //   .selectAll(".mouse-per-line")
       //   .data(selectedTicker)
       //   .enter()
       //   .append("g")
       //   .attr("class", "mouse-per-line");
-
       // mousePerLine
       //   .append("circle")
       //   .attr("r", 4)
       //   .style("fill", selectedColor)
       //   .style("opacity", "0");
-
       // mousePerLine.append("text").attr("transform", "translate(10,3)");
-
       // rule
       //   .append("svg:rect") // append a rect to catch mouse movements on canvas
       //   .attr("width", width) // can't catch mouse events on a g element
@@ -409,7 +405,6 @@ function buildChartPane(pTickers = selectedTickers) {
       //       d += " " + mouse[0] + "," + 0;
       //       return d;
       //     });
-
       //     d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
       //       console.log(width / mouse[0]);
       //       var xDate = x.invert(mouse[0]),
@@ -417,11 +412,9 @@ function buildChartPane(pTickers = selectedTickers) {
       //           return d.date;
       //         }).right;
       //       idx = bisect(d.values, xDate);
-
       //       var beginning = 0,
       //         end = lines[i].getTotalLength(),
       //         target = null;
-
       //       while (true) {
       //         target = Math.floor((beginning + end) / 2);
       //         pos = lines[i].getPointAtLength(target);
@@ -435,13 +428,10 @@ function buildChartPane(pTickers = selectedTickers) {
       //         else if (pos.x < mouse[0]) beginning = target;
       //         else break; //position found
       //       }
-
       //       d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
-
       //       return "translate(" + mouse[0] + "," + pos.y + ")";
       //     });
       //   }); //-- rule
-
       //-- build a circle in the end of price line
       console.log("1 circles??", circles);
       if (circles && circles.length > 0) {
@@ -462,8 +452,10 @@ function buildChartPane(pTickers = selectedTickers) {
         .style("stroke-width", 1)
         .style("fill", selectedColor);
       circles = [circle];
-    }; //buildPriceChart
-    const buildChangeChart = () => {
+    } //buildPriceChart
+
+    //-- build change chart
+    function buildChangeChart() {
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
       zValue = (d) => d["ticker"]; //TODO
@@ -603,7 +595,7 @@ function buildChartPane(pTickers = selectedTickers) {
           .style("fill", colorMapping(ticker));
         circles.push(circle);
       });
-    };
+    }
 
     if (pTickers.length == 1) {
       buildPriceChart();
@@ -616,15 +608,13 @@ function buildChartPane(pTickers = selectedTickers) {
     pChartType = chartType,
     pTickers = selectedTickers
   ) {
-    // console.log("updateChart :: ");
-
     const updatePriceChart = () => {
       console.log("buildChartPane :: updateChart, updatePriceChart");
 
       if (!pTickers[0]) return;
-      selectedTicker = pTickers[0];
-      selectedColor = colorMapping(selectedTicker);
-      selectedData = dataByTicker.get(selectedTicker);
+      let selectedTicker = pTickers[0];
+      let selectedColor = colorMapping(selectedTicker);
+      let selectedData = dataByTicker.get(selectedTicker);
 
       //-- update scales
       xScale = d3
