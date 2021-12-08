@@ -200,6 +200,11 @@ h1 {
   stroke: var(--hline-color);
   shape-rendering: crispEdges;
 }
+.thickHLine {
+  stroke: var(--origin-color);
+  stroke-width: 2px;
+  shape-rendering: crispEdges;
+}
 
 .vline {
   stroke: var(--vline-color);

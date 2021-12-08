@@ -477,10 +477,13 @@ function buildChartPane(pTickers = selectedTickers) {
         .range([innerHeight, 0]);
 
       //-- set grids :: vertical xGrid and horizontal yGrid
+      /*
+      d3.selectAll(".user").;
+      */
       xGrid = (g) =>
         g
-          .attr("class", "vline")
           .selectAll("line")
+          .attr("class", "vline")
           .data(xScale.ticks(10))
           .join("line")
           .attr("x1", (d) => xScale(d))
@@ -495,6 +498,10 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("class", "hline")
           .selectAll("line")
           .data(yScale.ticks(5))
+          // .attr("class", (d, i) => {
+          //   console.log("d", d);
+          //   return "thickHLine";
+          // })
           .join("line")
           .attr("x1", 0)
           .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
