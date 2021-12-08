@@ -390,32 +390,28 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("class", "mouse-over-effects")
         .append("line")
         .attr("class", "mouse-line")
+        .attr("x1", margin.left)
+        .attr("x2", margin.left)
         .attr("y1", margin.top - 10)
         .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#ff0000")
+        .attr("stroke", "#000000")
         .style("z-index", "10")
         .style("stroke-width", "1")
         .style("opacity", "1");
 
-      // rule = svg.append("g").attr("class", "mouse-over-effects");
-      // rule
-      //   .append("path")
-      //   .attr("class", "mouse-line")
+      var mousePerLine = rule
+        .selectAll(".mouse-per-line")
+        .data(selectedTicker)
+        .enter()
+        .append("g")
+        .attr("class", "mouse-per-line");
 
-      //   .attr("stroke", "#f00");
-      // // .style("opacity", "1");
-      // console.log("rule??", rule);
-      // var mousePerLine = rule
-      //   .selectAll(".mouse-per-line")
-      //   .data(selectedTicker)
-      //   .enter()
-      //   .append("g")
-      //   .attr("class", "mouse-per-line");
-      // mousePerLine
-      //   .append("circle")
-      //   .attr("r", 4)
-      //   .style("fill", selectedColor)
-      //   .style("opacity", "0");
+      mousePerLine
+        .append("circle")
+        .attr("r", 4)
+        .style("fill", selectedColor)
+        .style("opacity", ".5");
+
       // mousePerLine.append("text").attr("transform", "translate(10,3)");
       // rule
       //   .append("svg:rect") // append a rect to catch mouse movements on canvas
@@ -617,13 +613,15 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("class", "mouse-over-effects")
         .append("line")
         .attr("class", "mouse-line")
+        .attr("x1", margin.left)
+        .attr("x2", margin.left)
         .attr("y1", margin.top - 10)
         .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#ff0000")
+        .attr("stroke", "#000000")
         .style("z-index", "10")
         .style("stroke-width", "1")
         .style("opacity", "1");
-    }
+    } //buildChangeChart
 
     if (pTickers.length == 1) {
       buildPriceChart();
