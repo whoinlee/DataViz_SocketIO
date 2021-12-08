@@ -1,0 +1,211 @@
+@import "fonts.css";
+
+:root {
+  /* chart colors */
+  --vline-color: #dddddd;
+  --hline-color: #888888;
+  --origin-color: #000000;
+  --primary-color: #000000;
+  /* font sizes */
+  --time-font-size: 13px; /* New Cycle, regular */
+  --percent-font-size: 24px; /* New Cycle, bold */
+  --primary-font-size: 32px; /* New Cycle, bold */
+  --secondary-font-size: 16px; /* New Cycle, regular */
+  /* font weight */
+  --bold: 700;
+  --regular: 400;
+  /* chart dimensions */
+  --chart-div-width: 1050px;
+  --chart-div-height: 600px;
+  --chart-holder-width: 800px;
+  --chart-holder-height: var(--chart-div-height);
+  --chart-indication-width: calc(
+    var(--chart-div-width) - var(--chart-holder-width)
+  ); /* (1050-800)px = 250px */
+  --chart-indication-height: var(--chart-div-height);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "News Cycle", Sans-serif;
+  font-size: 16px;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  font-size: 3em;
+  color: white;
+  font-weight: var(--bold);
+  background-color: black;
+  width: 100vw;
+  height: 85px;
+  text-align: center;
+}
+
+#content {
+  font-size: var(--secondary-font-size);
+  color: var(--primary-color);
+  font-weight: var(--regular);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* -- selectPane related -- */
+.selectDiv {
+  width: 600px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  /* background-color: #eee; */
+}
+
+.selectDiv span {
+  padding-left: 20px;
+  padding-right: 20px;
+  font-weight: var(--bold);
+}
+/* ----------------------- */
+
+/* -- chartPane related --- */
+.chartDiv {
+  position: relative;
+  margin-bottom: 20px;
+  width: var(--chart-div-width);
+  height: var(--chart-div-height);
+  /* background-color: #ddd; */
+  /* border: 1px solid black; */
+}
+
+.chartHolder {
+  position: absolute;
+  left: 0px;
+  width: var(--chart-holder-width);
+  /* border: 1px solid green; */
+}
+
+.indicationHolder {
+  position: absolute;
+  left: var(--chart-holder-width);
+  width: var(--chart-indication-width);
+  height: 100%;
+  /* border: 2px solid purple; */
+}
+
+.infoHolder {
+  position: absolute;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  /* border: 1px solid red; */
+}
+/* ----------------------- */
+
+/* .ticker-info ---------- */
+.ticker-info {
+  font-size: var(--primary-font-size);
+  font-weight: var(--bold);
+}
+
+.ticker-info .block {
+  position: absolute;
+  width: 8px;
+  height: 52px;
+}
+
+.ticker-info .category {
+  position: absolute;
+  padding-left: 12px;
+  height: 60px;
+}
+
+.category .ticker {
+  position: absolute;
+  font-weight: var(--bold);
+  top: -10px;
+  text-transform: uppercase;
+}
+
+.ticker-info .category .price {
+  position: absolute;
+  top: 25px;
+  font-size: var(--secondary-font-size);
+  font-weight: var(--regular);
+}
+/* ---------------------- */
+
+/* .change-info --------- */
+.change-info {
+  position: absolute;
+  right: 10px;
+  top: -10px;
+  font-size: var(--primary-font-size);
+  font-weight: var(--bold);
+  width: 90px;
+  height: 60px;
+}
+
+.change-info .percent {
+  position: absolute;
+  right: 0px;
+}
+
+.change-info .percent span {
+  font-size: var(--percent-font-size);
+  font-weight: var(--bold);
+}
+
+.change-info .value {
+  position: absolute;
+  top: 35px;
+  right: 0px;
+  font-size: var(--secondary-font-size);
+  font-weight: var(--regular);
+}
+/* ---------------------- */
+
+/* axis */
+.tick line {
+  display: none;
+}
+
+.xAxis .tick text {
+  font-size: var(--time-font-size);
+  font-weight: var(--regular);
+}
+
+.yAxis .tick text {
+  font-size: 17px;
+}
+
+/* grid */
+.hline {
+  stroke: var(--hline-color);
+  shape-rendering: crispEdges;
+}
+
+.vline {
+  stroke: var(--vline-color);
+  shape-rendering: crispEdges;
+}
+
+/* svg {
+  background-color: #ccc;
+} */

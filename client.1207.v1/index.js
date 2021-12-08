@@ -14,10 +14,10 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 
 //-- HTML elements
 const contentDiv = document.getElementById("content");
+let chartDiv, indicationHolder;
 
-//-- format related
+//-- time related
 const formatTime = utcFormat("%H:%M");
-const formatNumber = d3.format(".2f");
 
 //-- chart related
 const tickers = ["AAPL", "GOOGL", "FB", "MSFT"];
@@ -60,12 +60,12 @@ csv("/market-history", col, (error, data) => {
     let dataArr = dataByTicker.get(currTicker);
     const firstPrice = dataArr[0].price;
     dataArr.forEach((item) => {
-      item.priceChange = item.price - firstPrice;
-      item.percentChange = ((item.price - firstPrice) / firstPrice) * 100;
+      item.priceChange = Math.round((item.price - firstPrice) * 100) / 100;
+      item.percentChange =
+        Math.round(((item.price - firstPrice) / firstPrice) * 10000) / 100;
     });
   });
 
-  console.log("dataWithChanges", dataWithChanges);
   buildSelectPane();
 });
 
@@ -74,43 +74,50 @@ const socket = io();
 socket.on("market events", function (data) {
   console.log("\nChange", data);
 
-  if (data.changes.length == 0) return;
-  // if (data.changes.length > 0) {
-  const timestamp = data.timestamp + "";
-  const changesArr = data.changes;
-  tickers.map((currTicker) => {
-    let dataArr, firstPrice;
-    if (dataByTicker.length == 0) {
-      dataArr = [];
-      firstPrice = 0;
-    } else {
-      dataArr = dataByTicker.get(currTicker);
-      firstPrice = dataArr[0].price;
-    }
-    let lastPrice = dataArr.length > 0 ? dataArr[dataArr.length - 1].price : 0;
-    let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
-    lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
-    const priceChange = lastPrice - firstPrice;
-    const percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
-    dataArr.push({
-      timestamp: timestamp,
-      ticker: currTicker,
-      price: lastPrice,
-      priceChange: priceChange,
-      percentChange: percentChange,
-    });
-    dataWithChanges.push({
-      timestamp: timestamp,
-      ticker: currTicker,
-      price: lastPrice,
-      priceChange: priceChange,
-      percentChange: percentChange,
-    });
-  });
-
-  if (stockChart) stockChart.update();
-
+  // if (dataByTicker.length == 0) {
+  //   console.log("???????? ever ????????");
+  //   return;
   // }
+
+  if (data.changes.length > 0) {
+    const timestamp = data.timestamp + "";
+    const changesArr = data.changes;
+    tickers.map((currTicker) => {
+      let dataArr, firstPrice;
+      if (dataByTicker.length == 0) {
+        dataArr = [];
+        firstPrice = 0;
+      } else {
+        dataArr = dataByTicker.get(currTicker);
+        firstPrice = dataArr[0].price;
+      }
+      let lastPrice =
+        dataArr.length > 0 ? dataArr[dataArr.length - 1].price : 0;
+      let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
+      lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
+      const priceChange = Math.round((lastPrice - firstPrice) * 100) / 100;
+      const percentChange =
+        Math.round(((lastPrice - firstPrice) / firstPrice) * 10000) / 100;
+      dataArr.push({
+        timestamp: timestamp,
+        ticker: currTicker,
+        price: lastPrice,
+        priceChange: priceChange,
+        percentChange: percentChange,
+      });
+      dataWithChanges.push({
+        timestamp: timestamp,
+        ticker: currTicker,
+        price: lastPrice,
+        priceChange: priceChange,
+        percentChange: percentChange,
+      });
+    });
+
+    if (stockChart) {
+      stockChart.update();
+    }
+  }
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
@@ -146,7 +153,7 @@ function buildSelectPane() {
       if (selectedTickers.length == 0) {
         hideChartPane();
       } else {
-        updateChartPane(selectedTickers);
+        redrawChartPane(selectedTickers);
       }
     });
   });
@@ -156,7 +163,7 @@ function buildChartPane(pTickers) {
   // console.log("buildChartPane, pTickers ?? ", pTickers);
 
   let stockPCChart = {};
-  let chartDiv, indicationHolder, infoHolders;
+  let infoHolders;
   let prices;
   let changeInfos, percents, values;
   buildInfo(pTickers);
@@ -210,18 +217,19 @@ function buildChartPane(pTickers) {
     //-- for each ticker
     pTickers.forEach((ticker, i) => {
       const priceChange = dataArr[i][lastIndex].priceChange;
-      let sign = "+";
+      let sign = priceChange == 0 ? "" : "+";
       changeInfos[i].style.color = upColor;
       if (priceChange < 0) {
         sign = "-";
         changeInfos[i].style.color = downColor;
       }
       infoHolders[i].style.top = 60 * i + "px";
-      prices[i].textContent = "$" + formatNumber(dataArr[i][lastIndex].price);
-      percents[i].innerHTML = `${sign}${formatNumber(
-        Math.abs(dataArr[i][lastIndex].percentChange)
+      prices[i].textContent =
+        "$" + Math.round(dataArr[i][lastIndex].price * 100) / 100;
+      percents[i].innerHTML = `${sign}${Math.abs(
+        dataArr[i][lastIndex].percentChange
       )}<span>%</span>`;
-      values[i].textContent = sign + "$" + formatNumber(Math.abs(priceChange));
+      values[i].textContent = sign + "$" + Math.abs(priceChange);
     });
   }
   function showInfo() {
@@ -235,7 +243,7 @@ function buildChartPane(pTickers) {
 
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
-  let svg, line, lines, rule, ruleLabels, circles;
+  let svg, line, lines, circle, circles;
   let xScale, yScale, zScale, xValue, yValue, zValue;
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let selectedData, selectedColor, selectedTicker;
@@ -336,7 +344,7 @@ function buildChartPane(pTickers) {
           `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
         );
       yAxis
-        .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
+        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
         .call((g) => g.select(".domain").remove());
 
       //-- draw a line
@@ -358,14 +366,8 @@ function buildChartPane(pTickers) {
         .attr("stroke", selectedColor)
         .style("stroke-width", 2)
         .style("fill", "none");
-      lines = [line];
 
-      // rule = svg.append("g");
-      // rule
-      //   .append("line")
-      //   .attr("y1", margin.top)
-      //   .attr("y2", height - margin.bottom)
-      //   .attr("stroke", "#000");
+      lines = [line];
 
       // const lastXValue = xScale(selectedData[selectedData.length - 1]);
       // const lastYValue = yScale(selectedData[selectedData.length - 1]);
@@ -543,7 +545,7 @@ function buildChartPane(pTickers) {
         .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
         .call((g) => g.select(".domain").remove());
       yAxis
-        .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
+        .call(d3.axisRight(yScale).ticks(5).tickFormat(d3.format(".2f")))
         .call((g) => g.select(".domain").remove());
 
       //-- update graph line
@@ -633,6 +635,7 @@ function buildChartPane(pTickers) {
       updateChangeChart();
     }
   }
+
   function redrawChart(transition = true, pTickers = selectedTickers) {
     if (pTickers.length > 1 && chartType == "price") {
       chartType = "change";
@@ -653,7 +656,6 @@ function buildChartPane(pTickers) {
       lines.forEach((line) => line.attr("visibility", "visible"));
       // circles.forEach((circle) => circle.attr("visibility", "visible"));
     }
-    if (rule) rule.attr("visibility", "visible");
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "visible"));
   }
@@ -662,10 +664,8 @@ function buildChartPane(pTickers) {
 
     if (lines && lines.length > 0) {
       lines.forEach((line) => line.attr("visibility", "hidden"));
-
       // circles.forEach((circle) => circle.attr("visibility", "hidden"));
     }
-    if (rule) rule.attr("visibility", "hidden");
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "hidden"));
   }
@@ -699,8 +699,8 @@ function buildChartPane(pTickers) {
   return stockPCChart;
 }
 
-function updateChartPane(pTickers = selectedTickers) {
-  // console.log("updateChartPane :: pTickers, ", pTickers);
+function redrawChartPane(pTickers = selectedTickers) {
+  // console.log("redrawChartPane :: pTickers, ", pTickers);
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
   } else {
@@ -711,8 +711,4 @@ function updateChartPane(pTickers = selectedTickers) {
 function hideChartPane() {
   // console.log("hideChartPane :: selectedTickers, ");
   stockChart.hide();
-}
-
-function resetChartPane() {
-  //-- TODO
 }
