@@ -471,9 +471,6 @@ function buildChartPane(pTickers = selectedTickers) {
         .range([innerHeight, 0]);
 
       //-- set grids :: vertical xGrid and horizontal yGrid
-      /*
-      d3.selectAll(".user").;
-      */
       xGrid = (g) =>
         g
           .selectAll("line")
@@ -492,10 +489,9 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("class", "hline")
           .selectAll("line")
           .data(yScale.ticks(5))
-          // .attr("class", (d, i) => {
-          //   console.log("d", d);
-          //   return "thickHLine";
-          // })
+          .attr("class", (d) => {
+            if (d == 0) return "thickHLine";
+          })
           .join("line")
           .attr("x1", 0)
           .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
@@ -603,6 +599,7 @@ function buildChartPane(pTickers = selectedTickers) {
       buildChangeChart();
     }
   } //buildChart
+
   function updateChart(
     transition = true,
     pChartType = chartType,
@@ -658,7 +655,6 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- update the circle in the end of the graph line
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      // console.log("circles[0] in the price update", circles[0]);
       circles[0]
         .attr("cx", lastXValue)
         .attr("cy", lastYValue)
@@ -669,9 +665,6 @@ function buildChartPane(pTickers = selectedTickers) {
 
     const updateChangeChart = () => {
       // console.log("buildChartPane :: updateChart, updateChangeChart");
-
-      // xValue = (d) => d["timestamp"];
-      // yValue = (d) => d["percentChange"];
 
       //-- update scales
       xScale = d3
