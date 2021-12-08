@@ -445,7 +445,6 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- build a circle in the end of price line
       console.log("1 circles??", circles);
       if (circles && circles.length > 0) {
-        console.log("removing circles---------------------->");
         circles.forEach((circle) => circle.remove());
         circles = [];
       }
@@ -461,7 +460,6 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("r", 4)
         .style("fill", selectedColor);
       circles = [circle];
-      console.log("2 circles??", circles);
     }; //buildPriceChart
     const buildChangeChart = () => {
       xValue = (d) => d["timestamp"];
@@ -553,6 +551,9 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- draw a line
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
+      if (circles && circles.length > 0)
+        circles.forEach((circle) => circle.remove());
+      circles = [];
       pTickers.forEach((ticker) => {
         const line = svg
           .append("g")
@@ -572,18 +573,24 @@ function buildChartPane(pTickers = selectedTickers) {
           .style("fill", "none");
         lines.push(line);
 
-        // const selectedData = dataByTicker.get(ticker);
-        // const lastXValue = xScale(selectedData[selectedData.length - 1]);
-        // const lastYValue = yScale(selectedData[selectedData.length - 1]);
-        // const circle = svg
-        //   .append("g")
-        //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
-        //   .append("circle")
-        //   .attr("cx", lastXValue)
-        //   .attr("cy", lastYValue)
-        //   .attr("r", 4)
-        //   .style("fill", selectedColor);
-        // circles.push(circle);
+        //-- draw circles
+        const selectedData = dataByTicker.get(ticker);
+        const lastXValue = xScale(
+          xValue(selectedData[selectedData.length - 1])
+        );
+        const lastYValue = yScale(
+          yValue(selectedData[selectedData.length - 1])
+        );
+        const circle = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`)
+          .append("circle");
+        circle
+          .attr("cx", lastXValue)
+          .attr("cy", lastYValue)
+          .attr("r", 4)
+          .style("fill", colorMapping(ticker));
+        circles.push(circle);
       });
     };
 
@@ -643,8 +650,8 @@ function buildChartPane(pTickers = selectedTickers) {
           "d",
           d3
             .line()
-            .x((d) => xScale(d.timestamp))
-            .y((d) => yScale(d.price))
+            .x((d) => xScale(d.timestamp)) //12/08
+            .y((d) => yScale(d.price)) //12/08
         );
 
       //-- update the circle in the end of the graph line
@@ -659,6 +666,9 @@ function buildChartPane(pTickers = selectedTickers) {
 
     const updateChangeChart = () => {
       // console.log("buildChartPane :: updateChart, updateChangeChart");
+
+      // xValue = (d) => d["timestamp"];
+      // yValue = (d) => d["percentChange"];
 
       //-- update scales
       xScale = d3
@@ -693,6 +703,9 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- update graph line
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
+      if (circles && circles.length > 0)
+        circles.forEach((circle) => circle.remove());
+      circles = [];
       pTickers.forEach((ticker, i) => {
         const line = svg
           .append("g")
@@ -703,8 +716,8 @@ function buildChartPane(pTickers = selectedTickers) {
             "d",
             d3
               .line()
-              .x((d) => xScale(d.timestamp))
-              .y((d) => yScale(d.percentChange))
+              .x((d) => xScale(d.timestamp)) //12/08
+              .y((d) => yScale(d.percentChange)) //12/08
           )
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
@@ -713,13 +726,23 @@ function buildChartPane(pTickers = selectedTickers) {
         // if (transition) line.transition().duration(500);
         lines.push(line);
 
-        // const lastXValue = xScale(
-        //   xValue(selectedData[selectedData.length - 1])
-        // );
-        // const lastYValue = yScale(
-        //   yValue(selectedData[selectedData.length - 1])
-        // );
-        // circle.attr("cx", lastXValue).attr("cy", lastYValue);
+        const selectedData = dataByTicker.get(ticker);
+        const lastXValue = xScale(
+          xValue(selectedData[selectedData.length - 1])
+        );
+        const lastYValue = yScale(
+          yValue(selectedData[selectedData.length - 1])
+        );
+        const circle = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`)
+          .append("circle");
+        circle
+          .attr("cx", lastXValue)
+          .attr("cy", lastYValue)
+          .attr("r", 4)
+          .style("fill", colorMapping(ticker));
+        circles.push(circle);
       });
     };
 
