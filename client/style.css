@@ -7,10 +7,11 @@
   --origin-color: #000000;
   --primary-color: #000000;
   /* font sizes */
-  --time-font-size: 13px; /* New Cycle, regular */
+  --time-font-size: 13px; /* xTicks: New Cycle, regular */
   --percent-font-size: 24px; /* New Cycle, bold */
   --primary-font-size: 32px; /* New Cycle, bold */
   --secondary-font-size: 16px; /* New Cycle, regular */
+  --yValue-font-size: 17.5px; /* yTicks: New Cycle, regular */
   /* font weight */
   --bold: 700;
   --regular: 400;
@@ -192,7 +193,7 @@ h1 {
 }
 
 .yAxis .tick text {
-  font-size: 18px;
+  font-size: var(--yValue-font-size);
   font-weight: var(--regular);
 }
 
