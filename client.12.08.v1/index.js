@@ -146,7 +146,7 @@ function buildSelectPane() {
       }
     });
   });
-} //buildSelectPane
+}
 
 function buildChartPane(pTickers = selectedTickers) {
   // console.log("buildChartPane, pTickers ?? ", pTickers);
@@ -330,7 +330,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("class", "yAxis")
         .attr(
           "transform",
-          `translate(${margin.left + innerWidth - 5}, ${margin.top - 9})`
+          `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
         );
       yAxis
         .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
@@ -457,9 +457,7 @@ function buildChartPane(pTickers = selectedTickers) {
       circle
         .attr("cx", lastXValue)
         .attr("cy", lastYValue)
-        .attr("r", 5)
-        .attr("stroke", "#fff")
-        .style("stroke-width", 1)
+        .attr("r", 4)
         .style("fill", selectedColor);
       circles = [circle];
     }; //buildPriceChart
@@ -546,7 +544,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("class", "yAxis")
         .attr(
           "transform",
-          `translate(${margin.left + innerWidth - 5}, ${margin.top - 9})`
+          `translate(${margin.left + innerWidth - 5}, ${margin.top - 10})`
         );
       yAxis
         .call(
@@ -597,9 +595,7 @@ function buildChartPane(pTickers = selectedTickers) {
         circle
           .attr("cx", lastXValue)
           .attr("cy", lastYValue)
-          .attr("r", 5)
-          .attr("stroke", "#fff")
-          .style("stroke-width", 1)
+          .attr("r", 4)
           .style("fill", colorMapping(ticker));
         circles.push(circle);
       });
@@ -610,7 +606,7 @@ function buildChartPane(pTickers = selectedTickers) {
     } else {
       buildChangeChart();
     }
-  } //buildChart
+  }
   function updateChart(
     transition = true,
     pChartType = chartType,
@@ -668,13 +664,11 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- update the circle in the end of the graph line
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      // console.log("circles[0] in the price update", circles[0]);
+      console.log("circles[0] in the price update", circles[0]);
       circles[0]
-        .attr("cx", lastXValue)
-        .attr("cy", lastYValue)
-        .attr("stroke", "#fff")
         .style("fill", selectedColor)
-        .style("stroke-width", 2);
+        .attr("cx", lastXValue)
+        .attr("cy", lastYValue);
     };
 
     const updateChangeChart = () => {
@@ -753,9 +747,7 @@ function buildChartPane(pTickers = selectedTickers) {
         circle
           .attr("cx", lastXValue)
           .attr("cy", lastYValue)
-          .attr("r", 5)
-          .attr("stroke", "#fff")
-          .style("stroke-width", 1)
+          .attr("r", 4)
           .style("fill", colorMapping(ticker));
         circles.push(circle);
       });
@@ -823,17 +815,17 @@ function buildChartPane(pTickers = selectedTickers) {
     // console.log("stockPCChart.show");
     showInfo();
     showChart();
-  }; //show
+  };
   stockPCChart.hide = function () {
     // console.log("stockPCChart.hide");
     hideInfo();
     hideChart();
-  }; //hide
+  };
   stockPCChart.update = function () {
     // console.log("stockPCChart.update");
     updateInfo();
     updateChart();
-  }; //update
+  };
   stockPCChart.redraw = function (pTickers = selectedTickers) {
     // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
 
@@ -844,14 +836,14 @@ function buildChartPane(pTickers = selectedTickers) {
     const transition = true;
     redrawChart(transition, pTickers);
     showChart();
-  }; //redraw
+  };
 
   return stockPCChart;
-} //buildChartPane
+}
 
 function updateChartPane() {
   if (stockChart) stockChart.update();
-} //updateCharPane
+}
 
 function redrawChartPane(pTickers = selectedTickers) {
   console.log("redrawChartPane :: pTickers, ", pTickers);
@@ -861,9 +853,9 @@ function redrawChartPane(pTickers = selectedTickers) {
   } else {
     stockChart.redraw(pTickers);
   }
-} //redrawChartPane
+}
 
 function hideChartPane() {
   stockChart.hide();
   //-- TODO::destroy??
-} //hideChartPane;
+}
