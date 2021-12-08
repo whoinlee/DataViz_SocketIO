@@ -73,7 +73,7 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  console.log("\nChange", data);
+  // console.log("\nChange", data);
   if (data.changes.length == 0) return;
 
   const timestamp = data.timestamp + "";
@@ -221,19 +221,20 @@ function buildChartPane(pTickers = selectedTickers) {
     });
   }
   function showInfo() {
-    console.log("buildChartPane, showInfo");
+    // console.log("buildChartPane, showInfo");
     indicationHolder.style.visibility = "visible";
   }
   function hideInfo() {
-    console.log("buildChartPane, hideInfo");
+    // console.log("buildChartPane, hideInfo");
     indicationHolder.style.visibility = "hidden";
   }
 
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
-  let svg, line, lines, rule, ruleLabels, circles;
-  let xScale, yScale, zScale, xValue, yValue, zValue;
+  let svg, line, lines, rule, circle, circles;
+  let xScale, yScale, xValue, yValue;
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
+  let zScale, zValue; //TODO
   let selectedData, selectedColor, selectedTicker;
   let dataArr;
   buildChart(pTickers);
@@ -335,7 +336,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
         .call((g) => g.select(".domain").remove());
 
-      //-- draw a line
+      //-- draw a price line
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       lines = [];
       line = svg
@@ -348,9 +349,10 @@ function buildChartPane(pTickers = selectedTickers) {
           d3
             .line()
             .curve(curve)
-            .x((d) => xScale(d.timestamp))
-            .y((d) => yScale(d.price))
+            .x(xValue) //12/08
+            .y(yValue) //12/08
         )
+        .attr("class", "line") //12/08
         .attr("stroke", selectedColor)
         .style("stroke-width", 2)
         .style("fill", "none");
@@ -362,8 +364,9 @@ function buildChartPane(pTickers = selectedTickers) {
       //   .attr("class", "mouse-line")
       //   .attr("y1", margin.top)
       //   .attr("y2", height - margin.bottom)
-      //   .attr("stroke", "#000")
-      //   .style("opacity", "0.75");
+      //   .attr("stroke", "#f00");
+      // // .style("opacity", "1");
+      // console.log("rule??", rule);
 
       // var mousePerLine = rule
       //   .selectAll(".mouse-per-line")
@@ -440,17 +443,21 @@ function buildChartPane(pTickers = selectedTickers) {
       //   }); //-- rule
 
       //-- build a circle in the end of price line
-      // const lastXValue = xScale(selectedData[selectedData.length - 1]);
-      // const lastYValue = yScale(selectedData[selectedData.length - 1]);
-      // circle = svg
-      //   .append("g")
-      //   .attr("transform", `translate(${margin.left}, ${margin.top})`)
-      //   .append("circle")
-      //   .attr("cx", lastXValue)
-      //   .attr("cy", lastYValue)
-      //   .attr("r", 4)
-      //   .style("fill", selectedColor);
-      // circles = circle;
+      if (circles && circles.length > 0)
+        circles.forEach((circle) => circle.remove());
+      circles = [];
+      const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
+      const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
+      circle = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .append("circle");
+      circle
+        .attr("cx", lastXValue)
+        .attr("cy", lastYValue)
+        .attr("r", 4)
+        .style("fill", selectedColor);
+      circles = [circle];
     }; //buildPriceChart
     const buildChangeChart = () => {
       xValue = (d) => d["timestamp"];
@@ -552,8 +559,8 @@ function buildChartPane(pTickers = selectedTickers) {
             "d",
             d3
               .line()
-              .x((d) => xScale(d.timestamp))
-              .y((d) => yScale(d.percentChange))
+              .x(xValue) //12/08
+              .y(yValue) //12/08
           )
           .attr("class", "line")
           .attr("stroke", colorMapping(ticker))
@@ -587,7 +594,7 @@ function buildChartPane(pTickers = selectedTickers) {
     pChartType = chartType,
     pTickers = selectedTickers
   ) {
-    console.log("updateChart :: ");
+    // console.log("updateChart :: ");
 
     const updatePriceChart = () => {
       // console.log("buildChartPane :: updateChart, updatePriceChart");
@@ -627,7 +634,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .datum(selectedData)
         .transition()
         .duration(500)
-        .attr("stroke", selectedColor)
+        // .attr("stroke", selectedColor)
         .attr(
           "d",
           d3
@@ -636,9 +643,9 @@ function buildChartPane(pTickers = selectedTickers) {
             .y((d) => yScale(d.price))
         );
 
-      // const lastXValue = xScale(selectedData[selectedData.length - 1]);
-      // const lastYValue = yScale(selectedData[selectedData.length - 1]);
-      // circles[0].attr("cx", lastXValue).attr("cy", lastYValue);
+      const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
+      const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
+      circle.attr("cx", lastXValue).attr("cy", lastYValue);
     };
 
     const updateChangeChart = () => {
@@ -697,9 +704,12 @@ function buildChartPane(pTickers = selectedTickers) {
         // if (transition) line.transition().duration(500);
         lines.push(line);
 
-        // const circle = circles[i];
-        // const lastXValue = xScale(selectedData[selectedData.length - 1]);
-        // const lastYValue = yScale(selectedData[selectedData.length - 1]);
+        // const lastXValue = xScale(
+        //   xValue(selectedData[selectedData.length - 1])
+        // );
+        // const lastYValue = yScale(
+        //   yValue(selectedData[selectedData.length - 1])
+        // );
         // circle.attr("cx", lastXValue).attr("cy", lastYValue);
       });
     };
@@ -709,9 +719,9 @@ function buildChartPane(pTickers = selectedTickers) {
     } else {
       updateChangeChart();
     }
-  }
+  } //updateChart
   function redrawChart(transition = true, pTickers = selectedTickers) {
-    console.log("redrawChart :: chartType?? 1 ", chartType);
+    // console.log("redrawChart :: chartType?? 1 ", chartType);
 
     if (pTickers.length > 1 && chartType == "price") {
       chartType = "change";
@@ -724,7 +734,7 @@ function buildChartPane(pTickers = selectedTickers) {
     }
     console.log("redrawChart :: chartType?? 2 ", chartType);
     updateChart(transition, chartType, pTickers);
-  }
+  } //redrawChart
   function showChart() {
     // console.log("buildChartPane, showChart, lines?", lines);
 
@@ -737,12 +747,12 @@ function buildChartPane(pTickers = selectedTickers) {
       circles.forEach((circle) => circle.attr("visibility", "visible"));
 
     //-- vertical line that shows the infos of lines
-    if (rule) rule.attr("visibility", "visible");
+    // if (rule) rule.attr("visibility", "visible");
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "visible"));
-  }
+  } //showChart
   function hideChart() {
     // console.log("buildChartPane, hideChart, lines?", lines);
 
@@ -755,12 +765,12 @@ function buildChartPane(pTickers = selectedTickers) {
       circles.forEach((circle) => circle.attr("visibility", "hidden"));
 
     //-- vertical line that shows the infos of lines
-    if (rule) rule.attr("visibility", "hidden");
+    // if (rule) rule.attr("visibility", "hidden");
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "hidden"));
-  }
+  } //hideChart
 
   stockPCChart.show = function () {
     // console.log("stockPCChart.show");
