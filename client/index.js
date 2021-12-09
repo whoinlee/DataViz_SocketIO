@@ -292,6 +292,22 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("height", height)
         .attr("viewBox", [0, 0, width, height])
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+        .on("mouseout", function () {
+          //-- hide line, circles and text
+          d3.select(".mouse-line").style("opacity", "0");
+          d3.select("#ruleLabel").style("opacity", "0");
+          d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+          d3.selectAll(".mouse-per-line text").style("opacity", "0");
+        })
+        .on("mouseover", function () {
+          //-- show line, circles and text
+          // if (rule.style.visibility == "visible") {
+          d3.select(".mouse-line").style("opacity", "1");
+          d3.select("#ruleLabel").style("opacity", "1");
+          d3.selectAll(".mouse-per-line circle").style("opacity", "1");
+          d3.selectAll(".mouse-per-line text").style("opacity", "1");
+          // }
+        })
         .on("pointermove", onPointerMove);
 
       function updateRuleInfo(date) {
@@ -411,7 +427,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("stroke", "#000")
         .style("z-index", "10")
         .style("stroke-width", "1")
-        .style("opacity", "1");
+        .style("opacity", "0");
 
       ruleLabel = rule
         .append("text")
@@ -420,7 +436,8 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("x", 6)
         .attr("y", margin.top - 2)
         .attr("fill", "#000")
-        .attr("text-anchor", "right");
+        .attr("text-anchor", "right")
+        .style("opacity", "1");
 
       var mousePerLine = rule
         .selectAll(".mouse-per-line")
@@ -434,9 +451,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("cy", margin.top + 3)
         .attr("r", 3)
         .style("fill", selectedColor)
-        // .style("stroke", selectedColor)
-        // .style("stroke-width", "1px")
-        .style("opacity", "1");
+        .style("opacity", "0");
       mousePerLine
         .append("text")
         .attr("x", 25)
