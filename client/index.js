@@ -301,18 +301,18 @@ function buildChartPane(pTickers = selectedTickers) {
         })
         .on("mouseover", function () {
           //-- show line, circles and text
-          // if (rule.style.visibility == "visible") {
           d3.select(".mouse-line").style("opacity", "1");
           d3.select("#ruleLabel").style("opacity", "1");
           d3.selectAll(".mouse-per-line circle").style("opacity", "1");
           d3.selectAll(".mouse-per-line text").style("opacity", "1");
-          // }
         })
         .on("pointermove", onPointerMove);
 
+      function onPointerMove(e) {
+        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+      }
       function updateRuleInfo(date) {
         // console.log("update called, date? ", date);
-
         if (xScale(date) > innerWidth) {
           rule.style("visibility", "hidden");
           return;
@@ -323,17 +323,10 @@ function buildChartPane(pTickers = selectedTickers) {
         rule.attr("transform", `translate(${xPos},0)`);
         ruleLabel.text(formatTime(date));
 
-        /*
-      //.attr("cy", margin.top + 3)
-      // .attr("y", 100) //-- needs to be updated
-      */
-        d3.selectAll(".mouse-per-line text").attr("y", 300).text("$000.00");
-        d3.selectAll(".mouse-per-line circle").attr("cy", 300);
-        // d3.selectAll(".mouse-per-line").attr("y", (d) => {});
-      }
-
-      function onPointerMove(e) {
-        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+        d3.selectAll(".mouse-per-line text")
+          .attr("y", 100) //y?? yPos
+          .text("price?, location?"); //price?? yValue
+        d3.selectAll(".mouse-per-line circle").attr("cy", 100);
       }
 
       xGridG = svg
@@ -413,6 +406,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .style("fill", selectedColor);
       circles = [circle];
 
+      //-- build a vertical line for inspection
       rule = svg
         .append("g")
         .attr("id", "rule")
