@@ -245,6 +245,47 @@ function buildChartPane(pTickers = selectedTickers) {
     if (pTickers.length < 1) return;
 
     if (svg) d3.selectAll("svg").remove();
+    svg = d3
+      .select("#chartHolder")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .on("mouseout", function () {
+        //-- hide rule, ruleLabel, circles and texts
+        d3.select("#rule").style("opacity", "0");
+        d3.select("#ruleLabel").style("opacity", "0");
+        d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+        d3.selectAll(".mouse-per-line text").style("opacity", "0");
+      })
+      .on("mouseover", function () {
+        //-- show line, circles and text
+        d3.select("#rule").style("opacity", "1");
+        d3.select("#ruleLabel").style("opacity", "1");
+        d3.selectAll(".mouse-per-line circle").style("opacity", "1");
+        d3.selectAll(".mouse-per-line text").style("opacity", "1");
+      })
+      .on("mousemove", onMouseMove);
+
+    function onMouseMove(e) {
+      updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+    }
+    function updateRuleInfo(date) {
+      // console.log("update called, date? ", date);
+      if (xScale(date) > innerWidth) {
+        rule.style("visibility", "hidden");
+        return;
+      }
+
+      var xPos = Math.floor(xScale(date));
+      rule.style("visibility", "visible");
+      rule.attr("transform", `translate(${xPos},0)`);
+      ruleLabel.text(formatTime(date));
+
+      d3.selectAll(".mouse-per-line text")
+        .attr("y", 100) //y?? yPos
+        .text("price?, location?"); //price?? yValue
+      d3.selectAll(".mouse-per-line circle").attr("cy", 100);
+    }
 
     //-- build price chart
     function buildPriceChart() {
@@ -284,50 +325,6 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("x2", innerWidth + 75) /* 75px extra wide */
           .attr("y1", (d) => yScale(d))
           .attr("y2", (d) => yScale(d));
-
-      svg = d3
-        .select("#chartHolder")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .attr("viewBox", [0, 0, width, height])
-        .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-        .on("mouseout", function () {
-          //-- hide line, circles and text
-          d3.select(".mouse-line").style("opacity", "0");
-          d3.select("#ruleLabel").style("opacity", "0");
-          d3.selectAll(".mouse-per-line circle").style("opacity", "0");
-          d3.selectAll(".mouse-per-line text").style("opacity", "0");
-        })
-        .on("mouseover", function () {
-          //-- show line, circles and text
-          d3.select(".mouse-line").style("opacity", "1");
-          d3.select("#ruleLabel").style("opacity", "1");
-          d3.selectAll(".mouse-per-line circle").style("opacity", "1");
-          d3.selectAll(".mouse-per-line text").style("opacity", "1");
-        })
-        .on("pointermove", onPointerMove);
-
-      function onPointerMove(e) {
-        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
-      }
-      function updateRuleInfo(date) {
-        // console.log("update called, date? ", date);
-        if (xScale(date) > innerWidth) {
-          rule.style("visibility", "hidden");
-          return;
-        }
-
-        var xPos = Math.floor(xScale(date));
-        rule.style("visibility", "visible");
-        rule.attr("transform", `translate(${xPos},0)`);
-        ruleLabel.text(formatTime(date));
-
-        d3.selectAll(".mouse-per-line text")
-          .attr("y", 100) //y?? yPos
-          .text("price?, location?"); //price?? yValue
-        d3.selectAll(".mouse-per-line circle").attr("cy", 100);
-      }
 
       xGridG = svg
         .append("g")
@@ -407,12 +404,10 @@ function buildChartPane(pTickers = selectedTickers) {
       circles = [circle];
 
       //-- build a vertical line for inspection
-      rule = svg
-        .append("g")
-        .attr("id", "rule")
-        .attr("class", "mouse-over-effects");
+      rule = svg.append("g").attr("class", "mouse-over-effects");
       rule
         .append("line")
+        .attr("id", "rule")
         .attr("class", "mouse-line")
         .attr("x1", margin.left)
         .attr("x2", margin.left)
@@ -495,41 +490,6 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
           .attr("y1", (d) => yScale(d))
           .attr("y2", (d) => yScale(d));
-
-      svg = d3
-        .select("#chartHolder")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .attr("viewBox", [0, 0, width, height])
-        .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-        .on("pointermove", onPointerMove);
-
-      function updateRuleInfo(date) {
-        // console.log("update called, date? ", date);
-
-        if (xScale(date) > innerWidth) {
-          rule.style("visibility", "hidden");
-          return;
-        }
-
-        var xPos = Math.floor(xScale(date));
-        rule.style("visibility", "visible");
-        rule.attr("transform", `translate(${xPos},0)`);
-        ruleLabel.text(formatTime(date));
-
-        /*
-        //.attr("cy", margin.top + 3)
-        // .attr("y", 100) //-- needs to be updated
-        */
-        d3.selectAll(".mouse-per-line text").attr("y", 300).text("$000.00");
-        d3.selectAll(".mouse-per-line circle").attr("cy", 300);
-        // d3.selectAll(".mouse-per-line").attr("y", (d) => {});
-      }
-
-      function onPointerMove(e) {
-        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
-      }
 
       xGridG = svg
         .append("g")
@@ -629,12 +589,10 @@ function buildChartPane(pTickers = selectedTickers) {
       }); //pTickers.forEach
 
       //-- draw a vertical line
-      rule = svg
-        .append("g")
-        .attr("id", "rule")
-        .attr("class", "mouse-over-effects");
+      rule = svg.append("g").attr("class", "mouse-over-effects");
       rule
         .append("line")
+        .attr("id", "rule")
         .attr("class", "mouse-line")
         .attr("x1", margin.left)
         .attr("x2", margin.left)
