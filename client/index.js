@@ -236,7 +236,6 @@ function buildChartPane(pTickers = selectedTickers) {
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let dataArr;
-
   xValue = (d) => d["timestamp"];
 
   buildChart(pTickers);
@@ -255,7 +254,7 @@ function buildChartPane(pTickers = selectedTickers) {
       .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
       .on("pointermove", onPointerMove);
 
-    function update(date) {
+    function updateRuleInfo(date) {
       // console.log("update called, date? ", date);
 
       if (xScale(date) > innerWidth) {
@@ -265,10 +264,39 @@ function buildChartPane(pTickers = selectedTickers) {
         rule.attr("transform", `translate(${xScale(date)},0)`);
       }
       ruleLabel.text(formatTime(date));
+
+      //-- circle location? price?
+      // d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
+      //   console.log(width / mouse[0]);
+      //   var xDate = x.invert(mouse[0]),
+      //     bisect = d3.bisector(function (d) {
+      //       return d.date;
+      //     }).right;
+      //   idx = bisect(d.values, xDate);
+
+      //   var beginning = 0,
+      //     end = lines[i].getTotalLength(),
+      //     target = null;
+
+      //   while (true) {
+      //     target = Math.floor((beginning + end) / 2);
+      //     pos = lines[i].getPointAtLength(target);
+      //     if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+      //       break;
+      //     }
+      //     if (pos.x > mouse[0]) end = target;
+      //     else if (pos.x < mouse[0]) beginning = target;
+      //     else break; //position found
+      //   }
+
+      //   d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
+
+      //   return "translate(" + mouse[0] + "," + pos.y + ")";
+      // }); //d3.selectAll
     }
 
     function onPointerMove(e) {
-      update(xScale.invert(d3.pointer(e)[0]));
+      updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
     }
 
     //-- build price chart
@@ -412,83 +440,24 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("fill", "#000")
         .attr("text-anchor", "right");
 
-      // var mousePerLine = rule
-      //   .selectAll(".mouse-per-line")
-      //   .data(selectedTicker)
-      //   .enter()
-      //   .append("g")
-      //   .attr("class", "mouse-per-line");
-
-      // mousePerLine
-      //   .append("circle")
-      //   .attr("r", 3)
-      //   .style("fill", selectedColor)
-      //   .style("opacity", "1");
-
-      // mousePerLine.append("text").attr("transform", "translate(100,100)");
-
-      // rule
-      //   .append("svg:rect") // append a rect to catch mouse movements on canvas
-      //   .attr("width", width) // can't catch mouse events on a g element
-      //   .attr("height", height)
-      //   .attr("fill", "ffcc00")
-      //   .attr("pointer-events", "all")
-      //   .on("mouseout", () => {
-      //     console.log("mouse out");
-      //     //-- on mouse out hide line, circles and text
-      //     // d3.select(".mouse-line").style("opacity", "0");
-      //     // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
-      //     // d3.selectAll(".mouse-per-line text").style("opacity", "0");
-      //   })
-      //   .on("mouseover", () => {
-      //     console.log("mouse over");
-      //     //-- on mouse in show line, circles and text
-      //     d3.select(".mouse-line").style("opacity", "1");
-      //     d3.selectAll(".mouse-per-line circle").style("opacity", "1");
-      //     d3.selectAll(".mouse-per-line text").style("opacity", "1");
-      //   })
-      //   .on("mousemove", () => {
-      //     console.log("mousemove");
-      //     // mouse moving over canvas
-      //     var mouse = d3.mouse(this);
-      //     d3.select(".mouse-line").attr("d", () => {
-      //       var d = "M" + mouse[0] + "," + height;
-      //       d += " " + mouse[0] + "," + 0;
-      //       console.log("d??", d);
-      //       return d;
-      //     }); //d3.select
-      //     d3.selectAll(".mouse-per-line").attr("transform", (d, i) => {
-      //       console.log(width / mouse[0]);
-      //       //       var xDate = x.invert(mouse[0]),
-      //       //         bisect = d3.bisector(function (d) {
-      //       //           return d.date;
-      //       //         }).right;
-      //       //       idx = bisect(d.values, xDate);
-      //       //       var beginning = 0,
-      //       //         end = lines[i].getTotalLength(),
-      //       //         target = null;
-      //       //       while (true) {
-      //       //         target = Math.floor((beginning + end) / 2);
-      //       //         pos = lines[i].getPointAtLength(target);
-      //       //         if (
-      //       //           (target === end || target === beginning) &&
-      //       //           pos.x !== mouse[0]
-      //       //         ) {
-      //       //           break;
-      //       //         }
-      //       //         if (pos.x > mouse[0]) end = target;
-      //       //         else if (pos.x < mouse[0]) beginning = target;
-      //       //         else break; //position found
-      //       //       }
-      //       //       d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
-      //       //       return "translate(" + mouse[0] + "," + pos.y + ")";
-      //     }); //d3.selectAll
-      //   }); //-- rule
+      var mousePerLine = rule
+        .selectAll(".mouse-per-line")
+        .data(selectedTicker)
+        .enter()
+        .append("g")
+        .attr("class", "mouse-per-line");
+      mousePerLine
+        .append("circle")
+        .attr("cx", margin.left)
+        .attr("cy", margin.top + 3)
+        .attr("r", 3)
+        .style("fill", selectedColor)
+        .style("opacity", "1");
+      mousePerLine.append("text").attr("transform", "translate(10,3)");
     } //buildPriceChart
 
     //-- build change chart
     function buildChangeChart() {
-      // xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
       // zValue = (d) => d["ticker"];
 
