@@ -245,59 +245,6 @@ function buildChartPane(pTickers = selectedTickers) {
     if (pTickers.length < 1) return;
 
     if (svg) d3.selectAll("svg").remove();
-    svg = d3
-      .select("#chartHolder")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-      .on("pointermove", onPointerMove);
-
-    function updateRuleInfo(date) {
-      // console.log("update called, date? ", date);
-
-      if (xScale(date) > innerWidth) {
-        rule.style("visibility", "hidden");
-      } else {
-        rule.style("visibility", "visible");
-        rule.attr("transform", `translate(${xScale(date)},0)`);
-      }
-      ruleLabel.text(formatTime(date));
-
-      //-- circle location? price?
-      // d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
-      //   console.log(width / mouse[0]);
-      //   var xDate = x.invert(mouse[0]),
-      //     bisect = d3.bisector(function (d) {
-      //       return d.date;
-      //     }).right;
-      //   idx = bisect(d.values, xDate);
-
-      //   var beginning = 0,
-      //     end = lines[i].getTotalLength(),
-      //     target = null;
-
-      //   while (true) {
-      //     target = Math.floor((beginning + end) / 2);
-      //     pos = lines[i].getPointAtLength(target);
-      //     if ((target === end || target === beginning) && pos.x !== mouse[0]) {
-      //       break;
-      //     }
-      //     if (pos.x > mouse[0]) end = target;
-      //     else if (pos.x < mouse[0]) beginning = target;
-      //     else break; //position found
-      //   }
-
-      //   d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
-
-      //   return "translate(" + mouse[0] + "," + pos.y + ")";
-      // }); //d3.selectAll
-    }
-
-    function onPointerMove(e) {
-      updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
-    }
 
     //-- build price chart
     function buildPriceChart() {
@@ -306,7 +253,6 @@ function buildChartPane(pTickers = selectedTickers) {
       let selectedColor = colorMapping(selectedTicker);
 
       yValue = (d) => d["price"];
-
       //-- set ranges
       xScale = d3
         .scaleUtc()
@@ -338,6 +284,42 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("x2", innerWidth + 75) /* 75px extra wide */
           .attr("y1", (d) => yScale(d))
           .attr("y2", (d) => yScale(d));
+
+      svg = d3
+        .select("#chartHolder")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+        .on("pointermove", onPointerMove);
+
+      function updateRuleInfo(date) {
+        // console.log("update called, date? ", date);
+
+        if (xScale(date) > innerWidth) {
+          rule.style("visibility", "hidden");
+          return;
+        }
+
+        var xPos = Math.floor(xScale(date));
+        rule.style("visibility", "visible");
+        rule.attr("transform", `translate(${xPos},0)`);
+        ruleLabel.text(formatTime(date));
+
+        /*
+      //.attr("cy", margin.top + 3)
+      // .attr("y", 100) //-- needs to be updated
+      */
+        d3.selectAll(".mouse-per-line text").attr("y", 300).text("$000.00");
+        d3.selectAll(".mouse-per-line circle").attr("cy", 300);
+        // d3.selectAll(".mouse-per-line").attr("y", (d) => {});
+      }
+
+      function onPointerMove(e) {
+        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+      }
+
       xGridG = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, 0)`)
@@ -452,8 +434,14 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("cy", margin.top + 3)
         .attr("r", 3)
         .style("fill", selectedColor)
+        // .style("stroke", selectedColor)
+        // .style("stroke-width", "1px")
         .style("opacity", "1");
-      mousePerLine.append("text").attr("transform", "translate(10,3)");
+      mousePerLine
+        .append("text")
+        .attr("x", 25)
+        .attr("y", 100) //-- needs to be updated
+        .text("");
     } //buildPriceChart
 
     //-- build change chart
@@ -498,6 +486,42 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
           .attr("y1", (d) => yScale(d))
           .attr("y2", (d) => yScale(d));
+
+      svg = d3
+        .select("#chartHolder")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+        .on("pointermove", onPointerMove);
+
+      function updateRuleInfo(date) {
+        // console.log("update called, date? ", date);
+
+        if (xScale(date) > innerWidth) {
+          rule.style("visibility", "hidden");
+          return;
+        }
+
+        var xPos = Math.floor(xScale(date));
+        rule.style("visibility", "visible");
+        rule.attr("transform", `translate(${xPos},0)`);
+        ruleLabel.text(formatTime(date));
+
+        /*
+        //.attr("cy", margin.top + 3)
+        // .attr("y", 100) //-- needs to be updated
+        */
+        d3.selectAll(".mouse-per-line text").attr("y", 300).text("$000.00");
+        d3.selectAll(".mouse-per-line circle").attr("cy", 300);
+        // d3.selectAll(".mouse-per-line").attr("y", (d) => {});
+      }
+
+      function onPointerMove(e) {
+        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+      }
+
       xGridG = svg
         .append("g")
         .attr("transform", `translate(${margin.left}, 0)`)

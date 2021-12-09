@@ -192,12 +192,6 @@ h1 {
   font-weight: var(--regular);
 }
 
-#ruleLabel {
-  font-size: 12px;
-  font-weight: var(--bold);
-  text-align: center;
-}
-
 .yAxis .tick text {
   font-size: var(--yValue-font-size);
   font-weight: var(--regular);
@@ -219,6 +213,16 @@ h1 {
   shape-rendering: crispEdges;
 }
 
-/* svg {
-  background-color: #ccc;
-} */
+/* rule (vertical line for inspection) related */
+#ruleLabel {
+  font-size: 12px;
+  font-weight: var(--bold);
+  /* text-align: center; */
+}
+
+.mouse-per-line text {
+  font-family: "News Cycle", Sans-serif;
+  font-size: 12px;
+  font-weight: var(--regular);
+  color: #000;
+}
