@@ -192,6 +192,12 @@ h1 {
   font-weight: var(--regular);
 }
 
+#ruleLabel {
+  font-size: 12px;
+  font-weight: var(--bold);
+  text-align: center;
+}
+
 .yAxis .tick text {
   font-size: var(--yValue-font-size);
   font-weight: var(--regular);

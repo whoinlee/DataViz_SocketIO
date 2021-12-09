@@ -16,6 +16,7 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 const contentDiv = document.getElementById("content");
 
 //-- format related
+// const formatDate = "%b %-d, %Y";
 const formatTime = utcFormat("%H:%M");
 const formatNumber = d3.format(".2f");
 
@@ -231,7 +232,7 @@ function buildChartPane(pTickers = selectedTickers) {
 
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
-  let svg, lines, rule, circles;
+  let svg, lines, circles, rule, ruleLabel;
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let dataArr;
@@ -263,13 +264,7 @@ function buildChartPane(pTickers = selectedTickers) {
         rule.style("visibility", "visible");
         rule.attr("transform", `translate(${xScale(date)},0)`);
       }
-      // date = Xs[d3.bisectCenter(Xs, date)];
-      // ruleLabel.text(formatDate(date));
-      // serie.attr("transform", ([, I]) => {
-      //   const i = I[d3.bisector((i) => X[i]).center(I, date)];
-      //   return `translate(0,${yScale(1) - yScale(Y[i] / Y[I[0]])})`;
-      // });
-      // svg.property("value", date).dispatch("input", { bubbles: true }); // for viewof
+      ruleLabel.text(formatTime(date));
     }
 
     function onPointerMove(e) {
@@ -283,8 +278,6 @@ function buildChartPane(pTickers = selectedTickers) {
       let selectedColor = colorMapping(selectedTicker);
 
       yValue = (d) => d["price"];
-
-      // .append("g");
 
       //-- set ranges
       xScale = d3
@@ -397,17 +390,27 @@ function buildChartPane(pTickers = selectedTickers) {
       rule = svg
         .append("g")
         .attr("id", "rule")
-        .attr("class", "mouse-over-effects")
+        .attr("class", "mouse-over-effects");
+      rule
         .append("line")
         .attr("class", "mouse-line")
         .attr("x1", margin.left)
         .attr("x2", margin.left)
-        .attr("y1", margin.top - 10)
-        .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#ff0000")
+        .attr("y1", margin.top)
+        .attr("y2", height - margin.bottom + 8)
+        .attr("stroke", "#000")
         .style("z-index", "10")
         .style("stroke-width", "1")
-        .style("opacity", ".5");
+        .style("opacity", "1");
+
+      ruleLabel = rule
+        .append("text")
+        .attr("id", "ruleLabel")
+        .attr("class", "label")
+        .attr("x", 6)
+        .attr("y", margin.top - 2)
+        .attr("fill", "#000")
+        .attr("text-anchor", "right");
 
       // var mousePerLine = rule
       //   .selectAll(".mouse-per-line")
@@ -627,17 +630,27 @@ function buildChartPane(pTickers = selectedTickers) {
       rule = svg
         .append("g")
         .attr("id", "rule")
-        .attr("class", "mouse-over-effects")
+        .attr("class", "mouse-over-effects");
+      rule
         .append("line")
         .attr("class", "mouse-line")
         .attr("x1", margin.left)
         .attr("x2", margin.left)
-        .attr("y1", margin.top - 10)
-        .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#ff0000")
+        .attr("y1", margin.top)
+        .attr("y2", height - margin.bottom + 8)
+        .attr("stroke", "#000")
         .style("z-index", "10")
         .style("stroke-width", "1")
-        .style("opacity", ".5");
+        .style("opacity", "1");
+
+      ruleLabel = rule
+        .append("text")
+        .attr("id", "ruleLabel")
+        .attr("class", "label")
+        .attr("x", 6)
+        .attr("y", margin.top - 2)
+        .attr("fill", "#000")
+        .attr("text-anchor", "right");
     } //buildChangeChart
 
     if (pTickers.length == 1) {
@@ -798,8 +811,6 @@ function buildChartPane(pTickers = selectedTickers) {
     }
   } //updateChart
   function redrawChart(transition = true, pTickers = selectedTickers) {
-    // console.log("redrawChart :: chartType?? 1 ", chartType);
-
     if (pTickers.length > 1 && chartType == "price") {
       chartType = "change";
       buildChart(pTickers);
@@ -809,7 +820,6 @@ function buildChartPane(pTickers = selectedTickers) {
       chartType = "price";
       buildChart(pTickers);
     }
-    console.log("redrawChart :: chartType?? 2 ", chartType);
     updateChart(transition, chartType, pTickers);
   } //redrawChart
   function showChart() {
