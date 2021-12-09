@@ -269,25 +269,38 @@ function buildChartPane(pTickers = selectedTickers) {
     function onMouseMove(e) {
       updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
     }
+
     function updateRuleInfo(date) {
-      // console.log("update called, date? ", date);
       if (xScale(date) > innerWidth) {
         rule.style("visibility", "hidden");
         return;
       }
+
+      //-- temporarily
+      d3.selectAll(".mouse-per-line text").style("opacity", "0");
+      d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+
+      const tickers = selectedTickers;
+      const data = dataByTicker.get(tickers[0]).map((item) => item.timestamp);
+      // console.log("data??", data);
+
+      // const bisect = d3.bisector(xValue).right;
+      // const index = bisect(data, xScale(date));
+      // console.log("index??", index);
 
       var xPos = Math.floor(xScale(date));
       rule.style("visibility", "visible");
       rule.attr("transform", `translate(${xPos},0)`);
       ruleLabel.text(formatTime(date));
 
-      d3.selectAll(".mouse-per-line text")
-        .attr("y", 100) //y?? yPos
-        .text("price?, location?"); //price?? yValue
-      d3.selectAll(".mouse-per-line circle").attr("cy", 100);
+      tickers.map((ticker) => {
+        const yPos = 100; //TODO
+        const yVal = formatNumber(100); //TODO
+        d3.selectAll(".mouse-per-line text").attr("y", yPos).text(`$${yVal}`); //TODO for change
+        d3.selectAll(".mouse-per-line circle").attr("cy", yPos);
+      });
     }
 
-    //-- build price chart
     function buildPriceChart() {
       let selectedTicker = pTickers[0];
       let selectedData = dataByTicker.get(selectedTicker);
@@ -448,7 +461,6 @@ function buildChartPane(pTickers = selectedTickers) {
         .text("");
     } //buildPriceChart
 
-    //-- build change chart
     function buildChangeChart() {
       yValue = (d) => d["percentChange"];
       // zValue = (d) => d["ticker"];
@@ -553,13 +565,7 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("transform", `translate(${margin.left}, ${margin.top})`)
           .append("path")
           .datum(dataByTicker.get(ticker))
-          .attr(
-            "d",
-            d3
-              .line()
-              .x(xValue) //12/08
-              .y(yValue) //12/08
-          )
+          .attr("d", d3.line().x(xValue).y(yValue))
           .attr("class", "line")
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
