@@ -232,10 +232,12 @@ function buildChartPane(pTickers = selectedTickers) {
   const chartTypes = ["price", "change"];
   let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
   let svg, lines, rule, circles;
-  let xScale, yScale, xValue, yValue;
+  let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
-  let zScale, zValue; //TODO
   let dataArr;
+
+  xValue = (d) => d["timestamp"];
+
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
@@ -248,9 +250,31 @@ function buildChartPane(pTickers = selectedTickers) {
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      // .attr("viewBox", [0, 0, width, height])
-      // .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-      .append("g");
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+      .on("pointermove", onPointerMove);
+
+    function update(date) {
+      // console.log("update called, date? ", date);
+
+      if (xScale(date) > innerWidth) {
+        rule.style("visibility", "hidden");
+      } else {
+        rule.style("visibility", "visible");
+        rule.attr("transform", `translate(${xScale(date)},0)`);
+      }
+      // date = Xs[d3.bisectCenter(Xs, date)];
+      // ruleLabel.text(formatDate(date));
+      // serie.attr("transform", ([, I]) => {
+      //   const i = I[d3.bisector((i) => X[i]).center(I, date)];
+      //   return `translate(0,${yScale(1) - yScale(Y[i] / Y[I[0]])})`;
+      // });
+      // svg.property("value", date).dispatch("input", { bubbles: true }); // for viewof
+    }
+
+    function onPointerMove(e) {
+      update(xScale.invert(d3.pointer(e)[0]));
+    }
 
     //-- build price chart
     function buildPriceChart() {
@@ -258,8 +282,9 @@ function buildChartPane(pTickers = selectedTickers) {
       let selectedData = dataByTicker.get(selectedTicker);
       let selectedColor = colorMapping(selectedTicker);
 
-      xValue = (d) => d["timestamp"];
       yValue = (d) => d["price"];
+
+      // .append("g");
 
       //-- set ranges
       xScale = d3
@@ -379,86 +404,90 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("x2", margin.left)
         .attr("y1", margin.top - 10)
         .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#000000")
+        .attr("stroke", "#ff0000")
         .style("z-index", "10")
         .style("stroke-width", "1")
-        .style("opacity", "1");
+        .style("opacity", ".5");
 
-      var mousePerLine = rule
-        .selectAll(".mouse-per-line")
-        .data(selectedTicker)
-        .enter()
-        .append("g")
-        .attr("class", "mouse-per-line");
+      // var mousePerLine = rule
+      //   .selectAll(".mouse-per-line")
+      //   .data(selectedTicker)
+      //   .enter()
+      //   .append("g")
+      //   .attr("class", "mouse-per-line");
 
-      mousePerLine
-        .append("circle")
-        .attr("r", 4)
-        .style("fill", selectedColor)
-        .style("opacity", "1");
+      // mousePerLine
+      //   .append("circle")
+      //   .attr("r", 3)
+      //   .style("fill", selectedColor)
+      //   .style("opacity", "1");
 
-      mousePerLine.append("text").attr("transform", "translate(10,3)");
+      // mousePerLine.append("text").attr("transform", "translate(100,100)");
 
       // rule
       //   .append("svg:rect") // append a rect to catch mouse movements on canvas
       //   .attr("width", width) // can't catch mouse events on a g element
       //   .attr("height", height)
-      //   .attr("fill", "none")
+      //   .attr("fill", "ffcc00")
       //   .attr("pointer-events", "all")
-      //   .on("mouseout", function () {
-      //     // on mouse out hide line, circles and text
-      //     d3.select(".mouse-line").style("opacity", "0");
-      //     d3.selectAll(".mouse-per-line circle").style("opacity", "0");
-      //     d3.selectAll(".mouse-per-line text").style("opacity", "0");
+      //   .on("mouseout", () => {
+      //     console.log("mouse out");
+      //     //-- on mouse out hide line, circles and text
+      //     // d3.select(".mouse-line").style("opacity", "0");
+      //     // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+      //     // d3.selectAll(".mouse-per-line text").style("opacity", "0");
       //   })
-      //   .on("mouseover", function () {
-      //     // on mouse in show line, circles and text
+      //   .on("mouseover", () => {
+      //     console.log("mouse over");
+      //     //-- on mouse in show line, circles and text
       //     d3.select(".mouse-line").style("opacity", "1");
       //     d3.selectAll(".mouse-per-line circle").style("opacity", "1");
       //     d3.selectAll(".mouse-per-line text").style("opacity", "1");
       //   })
-      //   .on("mousemove", function () {
+      //   .on("mousemove", () => {
+      //     console.log("mousemove");
       //     // mouse moving over canvas
       //     var mouse = d3.mouse(this);
-      //     d3.select(".mouse-line").attr("d", function () {
+      //     d3.select(".mouse-line").attr("d", () => {
       //       var d = "M" + mouse[0] + "," + height;
       //       d += " " + mouse[0] + "," + 0;
+      //       console.log("d??", d);
       //       return d;
-      //     });
-      //     d3.selectAll(".mouse-per-line").attr("transform", function (d, i) {
-      //       // console.log(width / mouse[0]);
-      //       var xDate = x.invert(mouse[0]),
-      //         bisect = d3.bisector(function (d) {
-      //           return d.date;
-      //         }).right;
-      //       idx = bisect(d.values, xDate);
-      //       var beginning = 0,
-      //         end = lines[i].getTotalLength(),
-      //         target = null;
-      //       while (true) {
-      //         target = Math.floor((beginning + end) / 2);
-      //         pos = lines[i].getPointAtLength(target);
-      //         if (
-      //           (target === end || target === beginning) &&
-      //           pos.x !== mouse[0]
-      //         ) {
-      //           break;
-      //         }
-      //         if (pos.x > mouse[0]) end = target;
-      //         else if (pos.x < mouse[0]) beginning = target;
-      //         else break; //position found
-      //       }
-      //       d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
-      //       return "translate(" + mouse[0] + "," + pos.y + ")";
-      //     });
+      //     }); //d3.select
+      //     d3.selectAll(".mouse-per-line").attr("transform", (d, i) => {
+      //       console.log(width / mouse[0]);
+      //       //       var xDate = x.invert(mouse[0]),
+      //       //         bisect = d3.bisector(function (d) {
+      //       //           return d.date;
+      //       //         }).right;
+      //       //       idx = bisect(d.values, xDate);
+      //       //       var beginning = 0,
+      //       //         end = lines[i].getTotalLength(),
+      //       //         target = null;
+      //       //       while (true) {
+      //       //         target = Math.floor((beginning + end) / 2);
+      //       //         pos = lines[i].getPointAtLength(target);
+      //       //         if (
+      //       //           (target === end || target === beginning) &&
+      //       //           pos.x !== mouse[0]
+      //       //         ) {
+      //       //           break;
+      //       //         }
+      //       //         if (pos.x > mouse[0]) end = target;
+      //       //         else if (pos.x < mouse[0]) beginning = target;
+      //       //         else break; //position found
+      //       //       }
+      //       //       d3.select(this).select("text").text(y.invert(pos.y).toFixed(2));
+      //       //       return "translate(" + mouse[0] + "," + pos.y + ")";
+      //     }); //d3.selectAll
       //   }); //-- rule
     } //buildPriceChart
 
     //-- build change chart
     function buildChangeChart() {
-      xValue = (d) => d["timestamp"];
+      // xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
-      zValue = (d) => d["ticker"]; //TODO
+      // zValue = (d) => d["ticker"];
 
       //-- set ranges
       xScale = d3
@@ -545,6 +574,8 @@ function buildChartPane(pTickers = selectedTickers) {
         )
         .call((g) => g.select(".domain").remove());
 
+      // .append("g");
+
       //-- draw lines and circles in the end of lines
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       if (circles && circles.length > 0)
@@ -603,10 +634,10 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("x2", margin.left)
         .attr("y1", margin.top - 10)
         .attr("y2", height - margin.bottom + 10)
-        .attr("stroke", "#000000")
+        .attr("stroke", "#ff0000")
         .style("z-index", "10")
         .style("stroke-width", "1")
-        .style("opacity", "1");
+        .style("opacity", ".5");
     } //buildChangeChart
 
     if (pTickers.length == 1) {
