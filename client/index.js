@@ -75,12 +75,10 @@ const socket = io();
 socket.on("market events", function (data) {
   if (isNewDay) {
     console.log("\nChange", data);
-    // console.log("data.timestamp?", formatTime(data.timestamp));
-    // console.log("dataWithChanges.length?????", dataWithChanges.length);
+    // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
   }
 
   if (data.changes.length == 0) return;
-
   const timestamp = data.timestamp + "";
   const changesArr = data.changes;
 
@@ -102,20 +100,18 @@ socket.on("market events", function (data) {
     });
   });
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
-  // if (isNewDay) {
-  //   console.log("dataByTicker??", dataByTicker);
-  //   console.log("dataWithChanges??", dataWithChanges);
-  //   console.log("dataWithChanges.length??", dataWithChanges.length);
-  //   isNewDay = false;
-  // }
-
-  //-- update chart w. additional data
+  if (isNewDay) {
+    console.log("dataByTicker??", dataByTicker);
+    console.log("dataWithChanges??", dataWithChanges);
+    console.log("dataWithChanges.length??", dataWithChanges.length);
+    isNewDay = false;
+  }
   updateChartPane();
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
-  console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
-  isNewDay = true;
+  // console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
+  isNewDay = true; //for testing
 
   //-- reset data and save the lastDayData
   const removeCount = dataWithChanges.length - 4;
@@ -125,11 +121,7 @@ socket.on("start new day", function (data) {
     item.priceChange = 0;
     item.percentChange = 0;
   });
-
-  tickers.map((currTicker) => {
-    let dataArr = dataByTicker.get(currTicker);
-    dataArr.splice(0, dataArr.length - 1);
-  });
+  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
   // console.log("dataByTicker?????", dataByTicker);
 });
 
@@ -167,6 +159,7 @@ function buildChartPane(pTickers = selectedTickers) {
 
   let stockPCChart = {};
   let chartDiv, indicationHolder;
+
   buildInfo(); //12/12
   updateInfo(pTickers); //12/12
 
@@ -177,10 +170,10 @@ function buildChartPane(pTickers = selectedTickers) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
       chartDiv.setAttribute("class", "chartDiv");
       chartDiv.innerHTML = `
-        <div class="chartHolder" id="chartHolder"></div>
-        <div class="indicationHolder" id="indicationHolder">
-        </div>
-      `;
+          <div class="chartHolder" id="chartHolder"></div>
+          <div class="indicationHolder" id="indicationHolder">
+          </div>
+        `;
       indicationHolder = document.getElementById("indicationHolder");
     }
     indicationHolder.innerHTML = tickers
