@@ -30,7 +30,6 @@ let stockChart;
 
 //-- data
 let stockData; //data w. additional columns of priceChange and percentChange
-let dataByTicker; //data map by ticker
 let selectedTickers = []; //current ticker selections
 
 //-- temporary
@@ -55,7 +54,7 @@ csv("/market-history", col, (error, data) => {
   contentDiv.textContent = "";
 
   //-- group data by ticker
-  dataByTicker = d3.group(stockData, (d) => d.ticker);
+  let dataByTicker = d3.group(stockData, (d) => d.ticker);
 
   //-- set priceChange and percentChange columns
   tickers.forEach((currTicker) => {
@@ -83,7 +82,7 @@ socket.on("market events", function (data) {
   const timestamp = data.timestamp + "";
 
   //-- update history data w. additional data
-  dataByTicker = d3.group(stockData, (d) => d.ticker);
+  let dataByTicker = d3.group(stockData, (d) => d.ticker);
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     let firstPrice = dataArr[0].price;
@@ -101,14 +100,6 @@ socket.on("market events", function (data) {
     });
   });
 
-  //-- for testing
-  // if (isNewDay) {
-  //   console.log("dataByTicker??", dataByTicker);
-  //   console.log("stockData??", stockData);
-  //   console.log("stockData.length??", stockData.length);
-  //   isNewDay = false;
-  // }
-
   updateChartPane();
 });
 socket.on("start new day", function (data) {
@@ -124,8 +115,6 @@ socket.on("start new day", function (data) {
     item.priceChange = 0;
     item.percentChange = 0;
   });
-  dataByTicker = d3.group(stockData, (d) => d.ticker); //12/13
-  // console.log("dataByTicker?????", dataByTicker);
 });
 
 function buildSelectPane() {
@@ -203,7 +192,8 @@ function buildChartPane(pTickers = selectedTickers) {
     // console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     if (pTickers.length == 0 || !pTickers) return;
 
-    dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
+    let dataByTicker = d3.group(stockData, (d) => d.ticker);
+    let dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
     const lastIndex = dataArr[0].length - 1;
 
     chartDiv
@@ -247,7 +237,6 @@ function buildChartPane(pTickers = selectedTickers) {
   let svg, lines, circles, rule, ruleLabel;
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
-  let dataArr;
   xValue = (d) => d["timestamp"];
   buildChart(pTickers);
 
@@ -292,7 +281,7 @@ function buildChartPane(pTickers = selectedTickers) {
       d3.selectAll(".mouse-per-line circle").style("opacity", "0");
 
       const tickers = selectedTickers;
-      const data = dataByTicker.get(tickers[0]).map((item) => item.timestamp);
+      // const data = dataByTicker.get(tickers[0]).map((item) => item.timestamp);
       // console.log("data??", data);
 
       var xPos = Math.floor(xScale(date));
@@ -312,6 +301,7 @@ function buildChartPane(pTickers = selectedTickers) {
     function buildPriceChart() {
       console.log("buildChartPane:: buildPriceChart, pTickers ?? ", pTickers);
 
+      let dataByTicker = d3.group(stockData, (d) => d.ticker);
       let selectedTicker = pTickers[0];
       let selectedData = dataByTicker.get(selectedTicker);
       let selectedColor = colorMapping(selectedTicker);
@@ -482,6 +472,9 @@ function buildChartPane(pTickers = selectedTickers) {
     } //buildPriceChart
 
     function buildChangeChart() {
+      let dataByTicker = d3.group(stockData, (d) => d.ticker);
+
+      xValue = (d) => d["timestamp"];
       yValue = (d) => d["percentChange"];
       // zValue = (d) => d["ticker"];
 
@@ -585,7 +578,14 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("transform", `translate(${margin.left}, ${margin.top})`)
           .append("path")
           .datum(dataByTicker.get(ticker))
-          .attr("d", d3.line().x(xValue).y(yValue))
+          .attr(
+            "d",
+            d3
+              .line()
+              .curve(curve)
+              .x((d) => xScale(d.timestamp))
+              .y((d) => yScale(d.percentChange))
+          )
           .attr("class", "line")
           .attr("stroke", colorMapping(ticker))
           .style("stroke-width", 2)
@@ -654,6 +654,8 @@ function buildChartPane(pTickers = selectedTickers) {
       // console.log("buildChartPane :: updateChart, updatePriceChart");
 
       if (!pTickers[0]) return;
+
+      let dataByTicker = d3.group(stockData, (d) => d.ticker);
       let selectedTicker = pTickers[0];
       let selectedColor = colorMapping(selectedTicker);
       let selectedData = dataByTicker.get(selectedTicker);
@@ -747,6 +749,7 @@ function buildChartPane(pTickers = selectedTickers) {
       if (circles && circles.length > 0)
         circles.forEach((circle) => circle.remove());
       circles = [];
+      let dataByTicker = d3.group(stockData, (d) => d.ticker);
       pTickers.forEach((ticker, i) => {
         const line = svg
           .append("g")
