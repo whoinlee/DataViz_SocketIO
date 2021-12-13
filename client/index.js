@@ -121,7 +121,7 @@ socket.on("start new day", function (data) {
     item.priceChange = 0;
     item.percentChange = 0;
   });
-  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
+  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker); //12/13
   // console.log("dataByTicker?????", dataByTicker);
 });
 
@@ -160,11 +160,11 @@ function buildChartPane(pTickers = selectedTickers) {
   let stockPCChart = {};
   let chartDiv, indicationHolder;
 
-  buildInfo(); //12/12
-  updateInfo(pTickers); //12/12
+  buildInfo();
+  updateInfo(pTickers);
 
   function buildInfo() {
-    console.log("buildChartPane, buildInfo");
+    // console.log("buildChartPane, buildInfo");
 
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
@@ -197,7 +197,7 @@ function buildChartPane(pTickers = selectedTickers) {
       .join("");
   }
   function updateInfo(pTickers = selectedTickers) {
-    console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
+    // console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     if (pTickers.length == 0 || !pTickers) return;
 
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
@@ -206,7 +206,6 @@ function buildChartPane(pTickers = selectedTickers) {
     chartDiv
       .querySelectorAll(".infoHolder")
       .forEach((holder) => holder.classList.add("hide"));
-
     //-- for each ticker
     pTickers.forEach((ticker, i) => {
       const infoHolder = document.getElementById(`${ticker}-infoHolder`);
@@ -231,11 +230,11 @@ function buildChartPane(pTickers = selectedTickers) {
   }
   function showInfo() {
     // console.log("buildChartPane, showInfo");
-    indicationHolder.style.visibility = "visible";
+    indicationHolder.classList.remove("hide");
   }
   function hideInfo() {
     // console.log("buildChartPane, hideInfo");
-    indicationHolder.style.visibility = "hidden";
+    indicationHolder.classList.add("hide");
   }
 
   const chartTypes = ["price", "change"];
@@ -244,8 +243,8 @@ function buildChartPane(pTickers = selectedTickers) {
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let dataArr;
-  xValue = (d) => d["timestamp"];
 
+  xValue = (d) => d["timestamp"];
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
@@ -631,7 +630,6 @@ function buildChartPane(pTickers = selectedTickers) {
       buildChangeChart();
     }
   } //buildChart
-
   function updateChart(
     transition = true,
     pChartType = chartType,

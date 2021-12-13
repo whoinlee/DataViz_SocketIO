@@ -109,6 +109,10 @@ h1 {
   /* border: 2px solid purple; */
 }
 
+.indicationHolder.hide {
+  display: none;
+}
+
 .infoHolder {
   position: absolute;
   width: 100%;
