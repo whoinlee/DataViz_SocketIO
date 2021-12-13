@@ -31,7 +31,6 @@ let stockChart;
 //-- data
 let dataWithChanges; //data w. additional columns of priceChange and percentChange
 let dataByTicker; //data map by ticker
-let lastDayData; //previous day's last data
 let selectedTickers = []; //current ticker selections
 
 //-- temporary
