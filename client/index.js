@@ -29,7 +29,7 @@ const downColor = "#d62728"; //-- red
 let stockChart;
 
 //-- data
-let dataWithChanges; //data w. additional columns of priceChange and percentChange
+let stockData; //data w. additional columns of priceChange and percentChange
 let dataByTicker; //data map by ticker
 let selectedTickers = []; //current ticker selections
 
@@ -49,13 +49,13 @@ csv("/market-history", col, (error, data) => {
     return;
   }
   //-- data w. addtional priceChange and percentChange columns
-  dataWithChanges = data;
+  stockData = data;
 
   //-- clear 'loading' msg
   contentDiv.textContent = "";
 
   //-- group data by ticker
-  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
+  dataByTicker = d3.group(stockData, (d) => d.ticker);
 
   //-- set priceChange and percentChange columns
   tickers.forEach((currTicker) => {
@@ -75,14 +75,15 @@ const socket = io();
 socket.on("market events", function (data) {
   if (isNewDay) {
     console.log("\nChange", data);
+    isNewDay = false;
     // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
   }
 
-  if (data.changes.length == 0) return;
+  // if (data.changes.length == 0) return;  //no need 12/13
   const timestamp = data.timestamp + "";
-  const changesArr = data.changes;
 
   //-- update history data w. additional data
+  dataByTicker = d3.group(stockData, (d) => d.ticker);
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     let firstPrice = dataArr[0].price;
@@ -91,7 +92,7 @@ socket.on("market events", function (data) {
     lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
     const priceChange = lastPrice - firstPrice;
     let percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
-    dataWithChanges.push({
+    stockData.push({
       timestamp: timestamp,
       ticker: currTicker,
       price: lastPrice,
@@ -99,13 +100,12 @@ socket.on("market events", function (data) {
       percentChange: percentChange,
     });
   });
-  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
 
   //-- for testing
   // if (isNewDay) {
   //   console.log("dataByTicker??", dataByTicker);
-  //   console.log("dataWithChanges??", dataWithChanges);
-  //   console.log("dataWithChanges.length??", dataWithChanges.length);
+  //   console.log("stockData??", stockData);
+  //   console.log("stockData.length??", stockData.length);
   //   isNewDay = false;
   // }
 
@@ -117,14 +117,14 @@ socket.on("start new day", function (data) {
   isNewDay = true; //for testing
 
   //-- reset data and save the lastDayData
-  const removeCount = dataWithChanges.length - 4;
-  dataWithChanges.splice(0, removeCount);
-  dataWithChanges.forEach((item) => {
+  const removeCount = stockData.length - 4;
+  stockData.splice(0, removeCount);
+  stockData.forEach((item) => {
     item.timestamp = data.timestamp + "";
     item.priceChange = 0;
     item.percentChange = 0;
   });
-  dataByTicker = d3.group(dataWithChanges, (d) => d.ticker); //12/13
+  dataByTicker = d3.group(stockData, (d) => d.ticker); //12/13
   // console.log("dataByTicker?????", dataByTicker);
 });
 
@@ -315,14 +315,6 @@ function buildChartPane(pTickers = selectedTickers) {
       let selectedTicker = pTickers[0];
       let selectedData = dataByTicker.get(selectedTicker);
       let selectedColor = colorMapping(selectedTicker);
-      // console.log(
-      //   "buildChartPane:: buildPriceChart, selectedData ?? ",
-      //   selectedData
-      // );
-      // console.log(
-      //   "buildChartPane:: buildPriceChart, dataWithChanges ?? ",
-      //   dataWithChanges
-      // );
 
       xValue = (d) => d["timestamp"];
       yValue = (d) => d["price"];
@@ -496,11 +488,11 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- set ranges
       xScale = d3
         .scaleUtc()
-        .domain(d3.extent(dataWithChanges, xValue))
+        .domain(d3.extent(stockData, xValue))
         .range([0, innerWidth]);
       yScale = d3
         .scaleLinear()
-        .domain(d3.extent(dataWithChanges, yValue))
+        .domain(d3.extent(stockData, yValue))
         .range([innerHeight, 0]);
 
       //-- set grids :: vertical xGrid and horizontal yGrid
@@ -722,11 +714,11 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- update scales
       xScale = d3
         .scaleUtc()
-        .domain(d3.extent(dataWithChanges, xValue))
+        .domain(d3.extent(stockData, xValue))
         .range([0, innerWidth]);
       yScale = d3
         .scaleLinear()
-        .domain(d3.extent(dataWithChanges, yValue))
+        .domain(d3.extent(stockData, yValue))
         .range([innerHeight, 0]);
 
       //-- update grids
