@@ -16,7 +16,6 @@ const margin = { top: 30, right: 80, bottom: 30, left: 20 },
 const contentDiv = document.getElementById("content");
 
 //-- format related
-// const formatDate = "%b %-d, %Y";
 const formatTime = utcFormat("%H:%M");
 const formatNumber = d3.format(".2f");
 
@@ -35,6 +34,9 @@ let dataByTicker; //data map by ticker
 let lastDayData; //previous day's last data
 let selectedTickers = []; //current ticker selections
 
+//-- temporary
+let isNewDay = false; //for testing
+
 //-- load historical data
 const col = (d) => {
   d.price = +d.price; //string to number
@@ -47,8 +49,6 @@ csv("/market-history", col, (error, data) => {
     contentDiv.textContent = error.target.response;
     return;
   }
-  // console.log("data loaded!!!!!!!!!!!!!!");
-
   //-- data w. addtional priceChange and percentChange columns
   dataWithChanges = data;
 
@@ -74,7 +74,12 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  // console.log("\nChange", data);
+  if (isNewDay) {
+    console.log("\nChange", data);
+    console.log("data.timestamp?", formatTime(data.timestamp));
+    console.log("dataWithChanges.length?????", dataWithChanges.length);
+  }
+
   if (data.changes.length == 0) return;
 
   const timestamp = data.timestamp + "";
@@ -83,17 +88,12 @@ socket.on("market events", function (data) {
   //-- update history data w. additional data
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
-    let firstPrice =
-      dataArr.length > 0 ? dataArr[0].price : lastDayData[currTicker].price;
-    let lastPrice =
-      dataArr.length > 0
-        ? dataArr[dataArr.length - 1].price
-        : lastDayData[currTicker].price;
+    let firstPrice = dataArr[0].price;
+    let lastPrice = dataArr[dataArr.length - 1].price;
     let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
     lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
     const priceChange = lastPrice - firstPrice;
-    let percentChange =
-      firstPrice == 0 ? 0 : ((lastPrice - firstPrice) / firstPrice) * 100;
+    let percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
     dataWithChanges.push({
       timestamp: timestamp,
       ticker: currTicker,
@@ -103,21 +103,35 @@ socket.on("market events", function (data) {
     });
   });
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
+  if (isNewDay) {
+    console.log("dataByTicker??", dataByTicker);
+    console.log("dataWithChanges??", dataWithChanges);
+    console.log("dataWithChanges.length??", dataWithChanges.length);
+    isNewDay = false;
+  }
 
   //-- update chart w. additional data
   updateChartPane();
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
+  console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
+  isNewDay = true;
 
   //-- reset data and save the lastDayData
-  lastDayData = new Object();
+  const removeCount = dataWithChanges.length - 4;
+  dataWithChanges.splice(0, removeCount);
+  dataWithChanges.forEach((item) => {
+    item.timestamp = data.timestamp + "";
+    item.priceChange = 0;
+    item.percentChange = 0;
+  });
+
   tickers.map((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
-    lastDayData[currTicker] = dataArr[dataArr.length - 1];
-    dataArr.length = 0;
+    dataArr.splice(0, dataArr.length - 1);
   });
-  dataWithChanges = new Array();
+  // console.log("dataByTicker?????", dataByTicker);
 });
 
 function buildSelectPane() {
@@ -276,7 +290,7 @@ function buildChartPane(pTickers = selectedTickers) {
         return;
       }
 
-      //-- temporarily
+      //-- TODO: temporarily
       d3.selectAll(".mouse-per-line text").style("opacity", "0");
       d3.selectAll(".mouse-per-line circle").style("opacity", "0");
 
@@ -284,16 +298,13 @@ function buildChartPane(pTickers = selectedTickers) {
       const data = dataByTicker.get(tickers[0]).map((item) => item.timestamp);
       // console.log("data??", data);
 
-      // const bisect = d3.bisector(xValue).right;
-      // const index = bisect(data, xScale(date));
-      // console.log("index??", index);
-
       var xPos = Math.floor(xScale(date));
       rule.style("visibility", "visible");
       rule.attr("transform", `translate(${xPos},0)`);
       ruleLabel.text(formatTime(date));
 
       tickers.map((ticker) => {
+        //-- testing
         const yPos = 100; //TODO
         const yVal = formatNumber(100); //TODO
         d3.selectAll(".mouse-per-line text").attr("y", yPos).text(`$${yVal}`); //TODO for change
@@ -307,6 +318,7 @@ function buildChartPane(pTickers = selectedTickers) {
       let selectedColor = colorMapping(selectedTicker);
 
       yValue = (d) => d["price"];
+
       //-- set ranges
       xScale = d3
         .scaleUtc()
