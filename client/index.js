@@ -100,12 +100,15 @@ socket.on("market events", function (data) {
     });
   });
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
-  if (isNewDay) {
-    console.log("dataByTicker??", dataByTicker);
-    console.log("dataWithChanges??", dataWithChanges);
-    console.log("dataWithChanges.length??", dataWithChanges.length);
-    isNewDay = false;
-  }
+
+  //-- for testing
+  // if (isNewDay) {
+  //   console.log("dataByTicker??", dataByTicker);
+  //   console.log("dataWithChanges??", dataWithChanges);
+  //   console.log("dataWithChanges.length??", dataWithChanges.length);
+  //   isNewDay = false;
+  // }
+
   updateChartPane();
 });
 socket.on("start new day", function (data) {
@@ -230,10 +233,12 @@ function buildChartPane(pTickers = selectedTickers) {
   }
   function showInfo() {
     // console.log("buildChartPane, showInfo");
+    // indicationHolder.style.visibility = "visible";
     indicationHolder.classList.remove("hide");
   }
   function hideInfo() {
     // console.log("buildChartPane, hideInfo");
+    // indicationHolder.style.visibility = "hidden";
     indicationHolder.classList.add("hide");
   }
 
@@ -243,12 +248,11 @@ function buildChartPane(pTickers = selectedTickers) {
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let dataArr;
-
   xValue = (d) => d["timestamp"];
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
-    // console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
+    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
     if (pTickers.length < 1) return;
 
     if (svg) d3.selectAll("svg").remove();
@@ -306,10 +310,21 @@ function buildChartPane(pTickers = selectedTickers) {
     }
 
     function buildPriceChart() {
+      console.log("buildChartPane:: buildPriceChart, pTickers ?? ", pTickers);
+
       let selectedTicker = pTickers[0];
       let selectedData = dataByTicker.get(selectedTicker);
       let selectedColor = colorMapping(selectedTicker);
+      // console.log(
+      //   "buildChartPane:: buildPriceChart, selectedData ?? ",
+      //   selectedData
+      // );
+      // console.log(
+      //   "buildChartPane:: buildPriceChart, dataWithChanges ?? ",
+      //   dataWithChanges
+      // );
 
+      xValue = (d) => d["timestamp"];
       yValue = (d) => d["price"];
 
       //-- set ranges
@@ -395,9 +410,17 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("path")
         .datum(selectedData)
-        .attr("d", d3.line().curve(curve).x(xValue).y(yValue))
+        .attr(
+          "d",
+          d3
+            .line()
+            .curve(curve)
+            .x((d) => xScale(d.timestamp))
+            .y((d) => yScale(d.price))
+        )
         .attr("class", "line")
         .attr("stroke", selectedColor)
+        // .attr("stroke", "#f00")  //-- for testing
         .style("stroke-width", 2)
         .style("fill", "none");
       lines = [line];
@@ -860,10 +883,12 @@ function buildChartPane(pTickers = selectedTickers) {
   return stockPCChart;
 } //buildChartPane
 
+//-- update on "market events"
 function updateChartPane() {
   if (stockChart) stockChart.update();
 } //updateCharPane
 
+//-- redraw on ticker selection change
 function redrawChartPane(pTickers = selectedTickers) {
   console.log("redrawChartPane :: pTickers, ", pTickers);
 
@@ -874,6 +899,7 @@ function redrawChartPane(pTickers = selectedTickers) {
   }
 } //redrawChartPane
 
+//-- hide on no ticker selected
 function hideChartPane() {
   stockChart.hide();
   //-- TODO::destroy??
