@@ -241,7 +241,7 @@ function buildChartPane(pTickers = selectedTickers) {
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
-    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
+    // console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
     if (pTickers.length < 1) return;
 
     if (svg) d3.selectAll("svg").remove();
@@ -250,25 +250,23 @@ function buildChartPane(pTickers = selectedTickers) {
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .on("mouseout", function () {
-        //-- hide rule, ruleLabel, circles and texts
+      .on("mouseout", (e) => {
+        //-- hide rule, ruleLabel, circles and texts that cross with the graph lines
         d3.select("#rule").style("opacity", "0");
         d3.select("#ruleLabel").style("opacity", "0");
         d3.selectAll(".mouse-per-line circle").style("opacity", "0");
         d3.selectAll(".mouse-per-line text").style("opacity", "0");
       })
-      .on("mouseover", function () {
-        //-- show line, circles and text
+      .on("mouseover", (e) => {
+        //-- show rule, ruleLabel, circles and texts that cross with the graph lines
         d3.select("#rule").style("opacity", "1");
         d3.select("#ruleLabel").style("opacity", "1");
         d3.selectAll(".mouse-per-line circle").style("opacity", "1");
         d3.selectAll(".mouse-per-line text").style("opacity", "1");
       })
-      .on("mousemove", onMouseMove);
-
-    function onMouseMove(e) {
-      updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
-    }
+      .on("mousemove", (e) => {
+        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+      });
 
     function updateRuleInfo(date) {
       if (xScale(date) > innerWidth) {
@@ -277,8 +275,8 @@ function buildChartPane(pTickers = selectedTickers) {
       }
 
       //-- TODO: temporarily
-      d3.selectAll(".mouse-per-line text").style("opacity", "0");
-      d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+      // d3.selectAll(".mouse-per-line text").style("opacity", "0");
+      // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
 
       const tickers = selectedTickers;
       // const data = dataByTicker.get(tickers[0]).map((item) => item.timestamp);
@@ -883,7 +881,7 @@ function updateChartPane() {
   if (stockChart) stockChart.update();
 } //updateCharPane
 
-//-- redraw on ticker selection change
+//-- redraw on ticker(checkbox) selection change
 function redrawChartPane(pTickers = selectedTickers) {
   console.log("redrawChartPane :: pTickers, ", pTickers);
 
