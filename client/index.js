@@ -75,8 +75,8 @@ const socket = io();
 socket.on("market events", function (data) {
   if (isNewDay) {
     console.log("\nChange", data);
-    console.log("data.timestamp?", formatTime(data.timestamp));
-    console.log("dataWithChanges.length?????", dataWithChanges.length);
+    // console.log("data.timestamp?", formatTime(data.timestamp));
+    // console.log("dataWithChanges.length?????", dataWithChanges.length);
   }
 
   if (data.changes.length == 0) return;
@@ -102,12 +102,12 @@ socket.on("market events", function (data) {
     });
   });
   dataByTicker = d3.group(dataWithChanges, (d) => d.ticker);
-  if (isNewDay) {
-    console.log("dataByTicker??", dataByTicker);
-    console.log("dataWithChanges??", dataWithChanges);
-    console.log("dataWithChanges.length??", dataWithChanges.length);
-    isNewDay = false;
-  }
+  // if (isNewDay) {
+  //   console.log("dataByTicker??", dataByTicker);
+  //   console.log("dataWithChanges??", dataWithChanges);
+  //   console.log("dataWithChanges.length??", dataWithChanges.length);
+  //   isNewDay = false;
+  // }
 
   //-- update chart w. additional data
   updateChartPane();
@@ -163,16 +163,15 @@ function buildSelectPane() {
 } //buildSelectPane
 
 function buildChartPane(pTickers = selectedTickers) {
-  // console.log("buildChartPane, pTickers ?? ", pTickers);
+  console.log("buildChartPane, pTickers ?? ", pTickers);
 
   let stockPCChart = {};
-  let chartDiv, indicationHolder, infoHolders;
-  let prices;
-  let changeInfos, percents, values;
-  buildInfo(pTickers);
+  let chartDiv, indicationHolder;
+  buildInfo(); //12/12
+  updateInfo(pTickers); //12/12
 
-  function buildInfo(pTickers = selectedTickers) {
-    // console.log("buildChartPane, buildInfo, pTickers ??", pTickers);
+  function buildInfo() {
+    console.log("buildChartPane, buildInfo");
 
     if (!chartDiv) {
       chartDiv = contentDiv.appendChild(document.createElement("div"));
@@ -184,9 +183,9 @@ function buildChartPane(pTickers = selectedTickers) {
       `;
       indicationHolder = document.getElementById("indicationHolder");
     }
-    indicationHolder.innerHTML = pTickers
+    indicationHolder.innerHTML = tickers
       .map(
-        (ticker) => `<div class="infoHolder">
+        (ticker) => `<div class="infoHolder" id="${ticker}-infoHolder">
         <div class="ticker-info" style="color: ${colorMapping(ticker)}">
           <div class="block" style="background-color: ${colorMapping(
             ticker
@@ -203,35 +202,38 @@ function buildChartPane(pTickers = selectedTickers) {
     </div>`
       )
       .join("");
-
-    infoHolders = chartDiv.querySelectorAll(".infoHolder");
-    prices = chartDiv.querySelectorAll(".ticker-info .category .price");
-    changeInfos = chartDiv.querySelectorAll(".change-info");
-    percents = chartDiv.querySelectorAll(".change-info .percent");
-    values = chartDiv.querySelectorAll(".change-info .value");
-    updateInfo(pTickers);
   }
   function updateInfo(pTickers = selectedTickers) {
-    // console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
+    console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     if (pTickers.length == 0 || !pTickers) return;
 
     dataArr = pTickers.map((ticker) => dataByTicker.get(ticker));
     const lastIndex = dataArr[0].length - 1;
+
+    chartDiv
+      .querySelectorAll(".infoHolder")
+      .forEach((holder) => holder.classList.add("hide"));
+
     //-- for each ticker
     pTickers.forEach((ticker, i) => {
+      const infoHolder = document.getElementById(`${ticker}-infoHolder`);
+      const changeInfoHolder = infoHolder.querySelector(".change-info");
       const priceChange = dataArr[i][lastIndex].priceChange;
       let sign = "+";
-      changeInfos[i].style.color = upColor;
+      changeInfoHolder.style.color = upColor;
       if (priceChange < 0) {
         sign = "-";
-        changeInfos[i].style.color = downColor;
+        changeInfoHolder.style.color = downColor;
       }
-      infoHolders[i].style.top = 60 * i + "px";
-      prices[i].textContent = "$" + formatNumber(dataArr[i][lastIndex].price);
-      percents[i].innerHTML = `${sign}${formatNumber(
+      infoHolder.classList.remove("hide");
+      infoHolder.style.top = 60 * i + "px";
+      infoHolder.querySelector(".price").textContent =
+        "$" + formatNumber(dataArr[i][lastIndex].price);
+      infoHolder.querySelector(".percent").innerHTML = `${sign}${formatNumber(
         Math.abs(dataArr[i][lastIndex].percentChange)
       )}<span>%</span>`;
-      values[i].textContent = sign + "$" + formatNumber(Math.abs(priceChange));
+      infoHolder.querySelector(".value").textContent =
+        sign + "$" + formatNumber(Math.abs(priceChange));
     });
   }
   function showInfo() {
@@ -844,7 +846,8 @@ function buildChartPane(pTickers = selectedTickers) {
   stockPCChart.redraw = function (pTickers = selectedTickers) {
     // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
 
-    buildInfo(pTickers);
+    // buildInfo(pTickers);//12/12
+    updateInfo(pTickers);
     showInfo();
 
     //TODO, transition?
