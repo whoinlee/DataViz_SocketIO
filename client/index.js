@@ -100,7 +100,7 @@ socket.on("market events", function (data) {
     });
   });
 
-  // updateChartPane();
+  updateChartPane();
 });
 socket.on("start new day", function (data) {
   console.log("\nNewDay", data);
