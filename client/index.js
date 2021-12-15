@@ -34,7 +34,7 @@ let stockChart; // a chartPane Object
 let selectedTickers = []; //current ticker selections
 
 //-- temporary
-let isNewDay = false; //for testing
+// let isNewDay = false; //for testing
 
 //-- load historical data
 const col = (d) => {
@@ -71,11 +71,11 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
-  if (isNewDay) {
-    console.log("\nChange", data);
-    isNewDay = false;
-    // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
-  }
+  // if (isNewDay) {
+  //   console.log("\nChange", data);
+  //   isNewDay = false;
+  //   // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
+  // }
 
   const timestamp = data.timestamp + "";
 
@@ -101,9 +101,9 @@ socket.on("market events", function (data) {
   updateChartPane();
 });
 socket.on("start new day", function (data) {
-  console.log("\nNewDay", data);
-  // console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
-  isNewDay = true; //for testing
+  // console.log("\nNewDay", data);
+  // // console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
+  // isNewDay = true; //for testing
 
   //-- reset data and save the lastDayData
   const removeCount = stockData.length - 4;
@@ -231,8 +231,6 @@ function buildChartPane(pTickers = selectedTickers) {
     indicationHolder.classList.add("hide");
   }
 
-  const chartTypes = ["price", "change"];
-  let chartType = pTickers.length <= 1 ? chartTypes[0] : chartTypes[1];
   let svg, lines, circles, rule, ruleLabel;
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
@@ -802,20 +800,6 @@ function buildChartPane(pTickers = selectedTickers) {
       updateChangeChart();
     }
   } //updateChart
-  // function redrawChart(pTickers = selectedTickers, transition = true) {
-  //   console.log("redrawChart");
-
-  //   // if (pTickers.length > 1 && chartType == "price") {
-  //   //   chartType = "change";
-  //   buildChart(pTickers);
-  //   // }
-
-  //   // if (pTickers.length == 1 && chartType == "change") {
-  //   //   chartType = "price";
-  //   //   buildChart(pTickers);
-  //   // }
-  //   // updateChart(transition, chartType, pTickers);
-  // } //redrawChart
   function showChart() {
     // console.log("buildChartPane, showChart, lines?", lines);
 
@@ -901,16 +885,10 @@ function buildChartPane(pTickers = selectedTickers) {
     updateRuleInfo();
   }; //update
   stockPCChart.redraw = function (pTickers = selectedTickers) {
-    console.log("stockPCChart.redraw, pTickers?? ", pTickers);
-
+    // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
     updateInfo(pTickers);
     showInfo();
-
-    //TODO, transition?
-    // const transition = true;
-    // redrawChart(pTickers, transition);
     buildChart(pTickers);
-    // updateRuleInfo();
     showChart();
   }; //redraw
   stockPCChart.show = function () {
@@ -934,7 +912,7 @@ function updateChartPane() {
 
 //-- redraw on ticker(checkbox) selection change
 function redrawChartPane(pTickers = selectedTickers) {
-  console.log("redrawChartPane :: pTickers, ", pTickers);
+  // console.log("redrawChartPane :: pTickers, ", pTickers);
 
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
