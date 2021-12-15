@@ -231,5 +231,8 @@ h1 {
   font-family: "News Cycle", Sans-serif;
   font-size: 12px;
   font-weight: var(--regular);
-  color: #000;
 }
+
+/* .mouse-over-effects .mouse-per-line rect {
+  border-radius: 5px;
+} */

@@ -258,6 +258,7 @@ function buildChartPane(pTickers = selectedTickers) {
         d3.select("#ruleLabel").style("opacity", "0");
         d3.selectAll(".mouse-per-line circle").style("opacity", "0");
         d3.selectAll(".mouse-per-line text").style("opacity", "0");
+        d3.selectAll(".mouse-per-line rect").style("opacity", "0");
       })
       .on("mouseover", (e) => {
         //-- show rule, ruleLabel, circles and texts that cross with the graph lines
@@ -265,6 +266,7 @@ function buildChartPane(pTickers = selectedTickers) {
         d3.select("#ruleLabel").style("opacity", "1");
         d3.selectAll(".mouse-per-line circle").style("opacity", "1");
         d3.selectAll(".mouse-per-line text").style("opacity", "1");
+        d3.selectAll(".mouse-per-line rect").style("opacity", "1");
       })
       .on("mousemove", (e) => {
         xDate = xScale.invert(d3.pointer(e)[0]);
@@ -436,7 +438,22 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("r", 3)
         .style("fill", selectedColor)
         .style("opacity", "0");
-      mousePerLine.append("text").attr("x", 27).attr("y", 0).text("");
+      mousePerLine
+        .append("rect")
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .attr("x", 26)
+        .attr("y", 0)
+        .attr("width", 48)
+        .attr("height", 18)
+        .style("fill", selectedColor)
+        .style("opacity", "0");
+      mousePerLine
+        .append("text")
+        .attr("x", 30)
+        .attr("y", 0)
+        .style("fill", "#fff")
+        .text("");
     } //buildPriceChart
 
     function buildChangeChart() {
@@ -619,7 +636,22 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("r", 3)
           .style("fill", colorMapping(ticker))
           .style("opacity", "1");
-        mousePerLine.append("text").attr("x", 30).attr("y", 0).text("");
+        mousePerLine
+          .append("rect")
+          .attr("rx", 4)
+          .attr("ry", 4)
+          .attr("x", 26)
+          .attr("y", 0)
+          .attr("width", 48)
+          .attr("height", 18)
+          .style("fill", colorMapping(ticker))
+          .style("opacity", "0"); // mousePerLine
+        mousePerLine
+          .append("text")
+          .attr("x", 32)
+          .attr("y", 0)
+          .style("fill", "#fff")
+          .text("");
       }); //pTickers
     } //buildChangeChart
 
@@ -867,6 +899,7 @@ function buildChartPane(pTickers = selectedTickers) {
       d3.selectAll(`.mouse-per-line.${ticker} text`)
         .attr("y", yPos + 3)
         .text(`$${yVal}`);
+      d3.selectAll(`.mouse-per-line.${ticker} rect`).attr("y", yPos - 10);
       d3.selectAll(`.mouse-per-line.${ticker} circle`).attr("cy", yPos);
     });
   } //updateRuleInfo
