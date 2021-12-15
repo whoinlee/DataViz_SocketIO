@@ -725,7 +725,11 @@ function buildChartPane(pTickers = selectedTickers) {
     };
 
     const updateChangeChart = () => {
-      console.log("updateChart, updateChangeChart");
+      console.log("updateChart, updateChangeChart, pTickers?", pTickers);
+      console.log(
+        "updateChart, updateChangeChart, selectedTickers?",
+        selectedTickers
+      );
 
       //-- update scales
       xScale = d3
@@ -758,10 +762,12 @@ function buildChartPane(pTickers = selectedTickers) {
         .call((g) => g.select(".domain").remove());
 
       //-- update graph line
-      let dataByTicker = d3.group(stockData, (d) => d.ticker);
-      pTickers.forEach((ticker, i) => {
-        const line = lines[i];
-        line
+      const dataByTicker = d3.group(stockData, (d) => d.ticker);
+      console.log("dataByTicker????", dataByTicker);
+      // pTickers.forEach((ticker, i) => {
+      selectedTickers.forEach((ticker, i) => {
+        console.log("lines[i]??", lines[i]);
+        lines[i]
           .datum(dataByTicker.get(ticker))
           // .transition()
           // .duration(500)
@@ -771,7 +777,8 @@ function buildChartPane(pTickers = selectedTickers) {
               .line()
               .x((d) => xScale(d.timestamp)) //12/08
               .y((d) => yScale(d.percentChange)) //12/08
-          );
+          )
+          .attr("stroke", colorMapping(ticker));
 
         //-- update the circle in the end of the graph line
         const selectedData = dataByTicker.get(ticker);
@@ -781,8 +788,11 @@ function buildChartPane(pTickers = selectedTickers) {
         const lastYValue = yScale(
           yValue(selectedData[selectedData.length - 1])
         );
-        const circle = circles[i];
-        circle.attr("cx", lastXValue).attr("cy", lastYValue);
+        // const circle = ;
+        circles[i]
+          .attr("cx", lastXValue)
+          .attr("cy", lastYValue)
+          .style("fill", colorMapping(ticker));
       });
     };
 
@@ -883,7 +893,7 @@ function buildChartPane(pTickers = selectedTickers) {
   } //updateRuleInfo
 
   stockPCChart.update = function () {
-    // console.log("stockPCChart.update");
+    console.log("stockPCChart.update");
     updateInfo();
     updateChart();
     updateRuleInfo();
@@ -891,13 +901,13 @@ function buildChartPane(pTickers = selectedTickers) {
   stockPCChart.redraw = function (pTickers = selectedTickers) {
     // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
 
-    // buildInfo(pTickers);//12/12
     updateInfo(pTickers);
     showInfo();
 
     //TODO, transition?
     const transition = true;
     redrawChart(transition, pTickers);
+    // updateRuleInfo();
     showChart();
   }; //redraw
   stockPCChart.show = function () {
