@@ -27,9 +27,9 @@ const colorMapping = d3.scaleOrdinal(tickers, colors);
 const curve = d3.curveLinear;
 const upColor = "#2ca02c"; //-- green
 const downColor = "#d62728"; //-- red
-let stockChart;
 
 //-- data
+let stockChart; // a chartPane Object
 let stockData; //data w. additional columns of priceChange and percentChange
 let selectedTickers = []; //current ticker selections
 
@@ -54,10 +54,8 @@ csv("/market-history", col, (error, data) => {
   //-- clear 'loading' msg
   contentDiv.textContent = "";
 
-  //-- group data by ticker
-  let dataByTicker = d3.group(stockData, (d) => d.ticker);
-
   //-- set priceChange and percentChange columns
+  const dataByTicker = d3.group(stockData, (d) => d.ticker); //-- group data by ticker
   tickers.forEach((currTicker) => {
     let dataArr = dataByTicker.get(currTicker);
     const firstPrice = dataArr[0].price;
@@ -79,7 +77,6 @@ socket.on("market events", function (data) {
     // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
   }
 
-  // if (data.changes.length == 0) return;  //no need 12/13
   const timestamp = data.timestamp + "";
 
   //-- update history data w. additional data
@@ -427,7 +424,6 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("text-anchor", "right")
         .style("opacity", "0");
 
-      // console.log("selectedTicker????", selectedTicker);
       var mousePerLine = rule
         .append("g")
         .attr("class", `mouse-per-line ${selectedTicker}`);
@@ -551,8 +547,6 @@ function buildChartPane(pTickers = selectedTickers) {
         )
         .call((g) => g.select(".domain").remove());
 
-      // .append("g");
-
       //-- draw lines and circles in the end of lines
       if (lines && lines.length > 0) lines.forEach((line) => line.remove());
       if (circles && circles.length > 0)
@@ -645,7 +639,7 @@ function buildChartPane(pTickers = selectedTickers) {
           .attr("width", 48)
           .attr("height", 18)
           .style("fill", colorMapping(ticker))
-          .style("opacity", "0"); // mousePerLine
+          .style("opacity", "0");
         mousePerLine
           .append("text")
           .attr("x", 32)
@@ -862,8 +856,8 @@ function buildChartPane(pTickers = selectedTickers) {
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
     texts.forEach((text) => (text.style.visibility = "hidden"));
   } //hideChart
-
   function updateRuleInfo(date = xDate) {
+    if (!date) return;
     console.log("updateRuleInfo :: date??", date);
 
     var xPos = xScale(date);
@@ -876,7 +870,7 @@ function buildChartPane(pTickers = selectedTickers) {
     rule.attr("transform", `translate(${xPos},0)`);
     ruleLabel.text(formatTime(date));
 
-    //-- TODO: temporarily, for testing
+    //-- temporarily, for testing
     // d3.selectAll(".mouse-per-line text").style("opacity", "0");
     // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
 
