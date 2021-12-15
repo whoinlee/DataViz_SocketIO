@@ -760,10 +760,8 @@ function buildChartPane(pTickers = selectedTickers) {
 
       //-- update graph line
       const dataByTicker = d3.group(stockData, (d) => d.ticker);
-      console.log("dataByTicker????", dataByTicker);
-      // pTickers.forEach((ticker, i) => {
+      // console.log("dataByTicker????", dataByTicker);
       selectedTickers.forEach((ticker, i) => {
-        console.log("lines[i]??", lines[i]);
         lines[i]
           .datum(dataByTicker.get(ticker))
           // .transition()
@@ -772,8 +770,8 @@ function buildChartPane(pTickers = selectedTickers) {
             "d",
             d3
               .line()
-              .x((d) => xScale(d.timestamp)) //12/08
-              .y((d) => yScale(d.percentChange)) //12/08
+              .x((d) => xScale(d.timestamp))
+              .y((d) => yScale(d.percentChange))
           )
           .attr("stroke", colorMapping(ticker));
 
@@ -785,7 +783,6 @@ function buildChartPane(pTickers = selectedTickers) {
         const lastYValue = yScale(
           yValue(selectedData[selectedData.length - 1])
         );
-        // const circle = ;
         circles[i]
           .attr("cx", lastXValue)
           .attr("cy", lastYValue)
