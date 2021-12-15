@@ -29,8 +29,8 @@ const upColor = "#2ca02c"; //-- green
 const downColor = "#d62728"; //-- red
 
 //-- data
-let stockChart; // a chartPane Object
 let stockData; //data w. additional columns of priceChange and percentChange
+let stockChart; // a chartPane Object
 let selectedTickers = []; //current ticker selections
 
 //-- temporary
@@ -57,7 +57,7 @@ csv("/market-history", col, (error, data) => {
   //-- set priceChange and percentChange columns
   const dataByTicker = d3.group(stockData, (d) => d.ticker); //-- group data by ticker
   tickers.forEach((currTicker) => {
-    let dataArr = dataByTicker.get(currTicker);
+    const dataArr = dataByTicker.get(currTicker);
     const firstPrice = dataArr[0].price;
     dataArr.forEach((item) => {
       item.priceChange = item.price - firstPrice;
@@ -82,13 +82,13 @@ socket.on("market events", function (data) {
   //-- update history data w. additional data
   let dataByTicker = d3.group(stockData, (d) => d.ticker);
   tickers.map((currTicker) => {
-    let dataArr = dataByTicker.get(currTicker);
-    let firstPrice = dataArr[0].price;
+    const dataArr = dataByTicker.get(currTicker);
+    const firstPrice = dataArr[0].price;
     let lastPrice = dataArr[dataArr.length - 1].price;
-    let newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
+    const newDataObj = data.changes.find(({ ticker }) => ticker === currTicker);
     lastPrice = newDataObj ? lastPrice + newDataObj.change : lastPrice;
     const priceChange = lastPrice - firstPrice;
-    let percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+    const percentChange = ((lastPrice - firstPrice) / firstPrice) * 100;
     stockData.push({
       timestamp: timestamp,
       ticker: currTicker,
@@ -109,6 +109,7 @@ socket.on("start new day", function (data) {
   const removeCount = stockData.length - 4;
   stockData.splice(0, removeCount);
   stockData.forEach((item) => {
+    //-- the last 4 items from previous day
     item.timestamp = data.timestamp + "";
     item.priceChange = 0;
     item.percentChange = 0;
@@ -240,7 +241,7 @@ function buildChartPane(pTickers = selectedTickers) {
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
-    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
+    console.log("buildChart, pTickers ?? ", pTickers);
 
     if (svg) {
       console.log("deleting previous svg and rebuilding ==============> ");
@@ -661,13 +662,11 @@ function buildChartPane(pTickers = selectedTickers) {
       buildChangeChart();
     }
   } //buildChart
-  function updateChart(
-    transition = true,
-    pChartType = chartType,
-    pTickers = selectedTickers
-  ) {
+  function updateChart(pTickers = selectedTickers, transition = true) {
+    // console.log("updateChart");
+
     const updatePriceChart = () => {
-      console.log("updateChart, updatePriceChart");
+      // console.log("updateChart, updatePriceChart");
 
       if (!pTickers[0]) return;
 
@@ -725,11 +724,11 @@ function buildChartPane(pTickers = selectedTickers) {
     };
 
     const updateChangeChart = () => {
-      console.log("updateChart, updateChangeChart, pTickers?", pTickers);
-      console.log(
-        "updateChart, updateChangeChart, selectedTickers?",
-        selectedTickers
-      );
+      // console.log("updateChart, updateChangeChart, pTickers?", pTickers);
+      // console.log(
+      //   "updateChart, updateChangeChart, selectedTickers?",
+      //   selectedTickers
+      // );
 
       //-- update scales
       xScale = d3
@@ -796,24 +795,27 @@ function buildChartPane(pTickers = selectedTickers) {
       });
     };
 
-    if (pChartType == "price") {
+    //TODO:: need??
+    if (pTickers.length == 1) {
       updatePriceChart();
     } else {
       updateChangeChart();
     }
   } //updateChart
-  function redrawChart(transition = true, pTickers = selectedTickers) {
-    if (pTickers.length > 1 && chartType == "price") {
-      chartType = "change";
-      buildChart(pTickers);
-    }
+  // function redrawChart(pTickers = selectedTickers, transition = true) {
+  //   console.log("redrawChart");
 
-    if (pTickers.length == 1 && chartType == "change") {
-      chartType = "price";
-      buildChart(pTickers);
-    }
-    updateChart(transition, chartType, pTickers);
-  } //redrawChart
+  //   // if (pTickers.length > 1 && chartType == "price") {
+  //   //   chartType = "change";
+  //   buildChart(pTickers);
+  //   // }
+
+  //   // if (pTickers.length == 1 && chartType == "change") {
+  //   //   chartType = "price";
+  //   //   buildChart(pTickers);
+  //   // }
+  //   // updateChart(transition, chartType, pTickers);
+  // } //redrawChart
   function showChart() {
     // console.log("buildChartPane, showChart, lines?", lines);
 
@@ -893,20 +895,21 @@ function buildChartPane(pTickers = selectedTickers) {
   } //updateRuleInfo
 
   stockPCChart.update = function () {
-    console.log("stockPCChart.update");
+    // console.log("stockPCChart.update");
     updateInfo();
     updateChart();
     updateRuleInfo();
   }; //update
   stockPCChart.redraw = function (pTickers = selectedTickers) {
-    // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
+    console.log("stockPCChart.redraw, pTickers?? ", pTickers);
 
     updateInfo(pTickers);
     showInfo();
 
     //TODO, transition?
-    const transition = true;
-    redrawChart(transition, pTickers);
+    // const transition = true;
+    // redrawChart(pTickers, transition);
+    buildChart(pTickers);
     // updateRuleInfo();
     showChart();
   }; //redraw
@@ -931,7 +934,7 @@ function updateChartPane() {
 
 //-- redraw on ticker(checkbox) selection change
 function redrawChartPane(pTickers = selectedTickers) {
-  // console.log("redrawChartPane :: pTickers, ", pTickers);
+  console.log("redrawChartPane :: pTickers, ", pTickers);
 
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
