@@ -238,6 +238,7 @@ function buildChartPane(pTickers = selectedTickers) {
   let svg, lines, circles, rule, ruleLabel;
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
+  let xDate;
   xValue = (d) => d["timestamp"];
   buildChart(pTickers);
 
@@ -266,48 +267,10 @@ function buildChartPane(pTickers = selectedTickers) {
         d3.selectAll(".mouse-per-line text").style("opacity", "1");
       })
       .on("mousemove", (e) => {
-        updateRuleInfo(xScale.invert(d3.pointer(e)[0]));
+        xDate = xScale.invert(d3.pointer(e)[0]);
+        updateRuleInfo(xDate);
       });
-
-    function updateRuleInfo(date) {
-      console.log("updateRuleInfo :: selectedTickers??", selectedTickers);
-
-      var xPos = xScale(date);
-      if (xPos > innerWidth || xPos <= 0) {
-        rule.style("visibility", "hidden");
-        return;
-      }
-
-      rule.style("visibility", "visible");
-      rule.attr("transform", `translate(${xPos},0)`);
-      ruleLabel.text(formatTime(date));
-
-      //-- TODO: temporarily, for testing
-      // d3.selectAll(".mouse-per-line text").style("opacity", "0");
-      // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
-
-      const timeStamp = date.getTime();
-      const tickers = selectedTickers;
-      const dataByTicker = d3.group(stockData, (d) => d.ticker);
-      const bisect = d3.bisector((d) => d.timestamp).center;
-      const totalTickers = tickers.length;
-      tickers.forEach((ticker) => {
-        const dataArr = dataByTicker.get(ticker);
-        const index = bisect(dataArr, timeStamp);
-        const yVal =
-          totalTickers <= 1
-            ? formatNumber(dataArr[index].price)
-            : formatPercent(dataArr[index].percentChange) + "%";
-        const yPos =
-          totalTickers <= 1
-            ? yScale(dataArr[index].price) + margin.top
-            : yScale(dataArr[index].percentChange) + margin.top;
-        d3.selectAll(`.mouse-per-line.${ticker} text`)
-          .attr("y", yPos)
-          .text(`$${yVal}`);
-        d3.selectAll(`.mouse-per-line.${ticker} circle`).attr("cy", yPos);
-      });
-    }
+    // }//buildChart
 
     function buildPriceChart() {
       console.log("buildPriceChart, pTickers ?? ", pTickers);
@@ -460,9 +423,9 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("y", margin.top - 2)
         .attr("fill", "#000")
         .attr("text-anchor", "right")
-        .style("opacity", "1");
+        .style("opacity", "0");
 
-      console.log("selectedTicker????", selectedTicker);
+      // console.log("selectedTicker????", selectedTicker);
       var mousePerLine = rule
         .append("g")
         .attr("class", `mouse-per-line ${selectedTicker}`);
@@ -472,8 +435,8 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("cy", margin.top + 3)
         .attr("r", 3)
         .style("fill", selectedColor)
-        .style("opacity", "1");
-      mousePerLine.append("text").attr("x", 30).attr("y", 0).text("");
+        .style("opacity", "0");
+      mousePerLine.append("text").attr("x", 27).attr("y", 0).text("");
     } //buildPriceChart
 
     function buildChangeChart() {
@@ -868,10 +831,51 @@ function buildChartPane(pTickers = selectedTickers) {
     texts.forEach((text) => (text.style.visibility = "hidden"));
   } //hideChart
 
+  function updateRuleInfo(date = xDate) {
+    console.log("updateRuleInfo :: date??", date);
+
+    var xPos = xScale(date);
+    if (xPos > innerWidth || xPos <= 0) {
+      rule.style("visibility", "hidden");
+      return;
+    }
+
+    rule.style("visibility", "visible");
+    rule.attr("transform", `translate(${xPos},0)`);
+    ruleLabel.text(formatTime(date));
+
+    //-- TODO: temporarily, for testing
+    // d3.selectAll(".mouse-per-line text").style("opacity", "0");
+    // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
+
+    const timeStamp = date.getTime();
+    const tickers = selectedTickers;
+    const dataByTicker = d3.group(stockData, (d) => d.ticker);
+    const bisect = d3.bisector((d) => d.timestamp).center;
+    const totalTickers = tickers.length;
+    tickers.forEach((ticker) => {
+      const dataArr = dataByTicker.get(ticker);
+      const index = bisect(dataArr, timeStamp);
+      const yVal =
+        totalTickers <= 1
+          ? formatNumber(dataArr[index].price)
+          : formatPercent(dataArr[index].percentChange) + "%";
+      const yPos =
+        totalTickers <= 1
+          ? yScale(dataArr[index].price) + margin.top
+          : yScale(dataArr[index].percentChange) + margin.top;
+      d3.selectAll(`.mouse-per-line.${ticker} text`)
+        .attr("y", yPos + 3)
+        .text(`$${yVal}`);
+      d3.selectAll(`.mouse-per-line.${ticker} circle`).attr("cy", yPos);
+    });
+  } //updateRuleInfo
+
   stockPCChart.update = function () {
     // console.log("stockPCChart.update");
     updateInfo();
     updateChart();
+    updateRuleInfo();
   }; //update
   stockPCChart.redraw = function (pTickers = selectedTickers) {
     // console.log("stockPCChart.redraw, pTickers?? ", pTickers);
