@@ -240,10 +240,12 @@ function buildChartPane(pTickers = selectedTickers) {
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
-    // console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
-    if (pTickers.length < 1) return;
+    console.log("buildChartPane:: buildChart, pTickers ?? ", pTickers);
 
-    if (svg) d3.selectAll("svg").remove();
+    if (svg) {
+      console.log("deleting previous svg and rebuilding ==============> ");
+      d3.selectAll("svg").remove();
+    }
     svg = d3
       .select("#chartHolder")
       .append("svg")
@@ -269,7 +271,6 @@ function buildChartPane(pTickers = selectedTickers) {
         xDate = xScale.invert(d3.pointer(e)[0]);
         updateRuleInfo(xDate);
       });
-    // }//buildChart
 
     function buildPriceChart() {
       console.log("buildPriceChart, pTickers ?? ", pTickers);
@@ -362,6 +363,7 @@ function buildChartPane(pTickers = selectedTickers) {
       lines = [];
       const line = svg
         .append("g")
+        .attr("id", "priceGraph")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("path")
         .datum(selectedData)
@@ -387,6 +389,7 @@ function buildChartPane(pTickers = selectedTickers) {
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
       const circle = svg
         .append("g")
+        .attr("id", "dotTip")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("circle");
       circle
@@ -553,9 +556,11 @@ function buildChartPane(pTickers = selectedTickers) {
         circles.forEach((circle) => circle.remove());
       lines = [];
       circles = [];
+      //-- draw graph lines
       pTickers.forEach((ticker) => {
         const line = svg
           .append("g")
+          .attr("id", `changeGraph${ticker}`)
           .attr("transform", `translate(${margin.left}, ${margin.top})`)
           .append("path")
           .datum(dataByTicker.get(ticker))
@@ -583,6 +588,7 @@ function buildChartPane(pTickers = selectedTickers) {
         );
         const circle = svg
           .append("g")
+          .attr("id", `dotTip${ticker}`)
           .attr("transform", `translate(${margin.left}, ${margin.top})`)
           .append("circle");
         circle
@@ -698,16 +704,16 @@ function buildChartPane(pTickers = selectedTickers) {
       //-- update graph line
       lines[0]
         .datum(selectedData)
-        .transition()
-        .duration(500)
-        .attr("stroke", selectedColor)
+        // .transition()
+        // .duration(500)
         .attr(
           "d",
           d3
             .line()
-            .x((d) => xScale(d.timestamp)) //12/08
-            .y((d) => yScale(d.price)) //12/08
-        );
+            .x((d) => xScale(d.timestamp))
+            .y((d) => yScale(d.price))
+        )
+        .attr("stroke", selectedColor);
 
       //-- update the circle in the end of the graph line
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
@@ -715,9 +721,7 @@ function buildChartPane(pTickers = selectedTickers) {
       circles[0]
         .attr("cx", lastXValue)
         .attr("cy", lastYValue)
-        .attr("stroke", "#fff")
-        .style("fill", selectedColor)
-        .style("stroke-width", 2);
+        .style("fill", selectedColor);
     };
 
     const updateChangeChart = () => {
@@ -754,32 +758,22 @@ function buildChartPane(pTickers = selectedTickers) {
         .call((g) => g.select(".domain").remove());
 
       //-- update graph line
-      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
-      lines = [];
-      if (circles && circles.length > 0)
-        circles.forEach((circle) => circle.remove());
-      circles = [];
       let dataByTicker = d3.group(stockData, (d) => d.ticker);
       pTickers.forEach((ticker, i) => {
-        const line = svg
-          .append("g")
-          .attr("transform", `translate(${margin.left}, ${margin.top})`)
-          .append("path")
+        const line = lines[i];
+        line
           .datum(dataByTicker.get(ticker))
+          // .transition()
+          // .duration(500)
           .attr(
             "d",
             d3
               .line()
               .x((d) => xScale(d.timestamp)) //12/08
               .y((d) => yScale(d.percentChange)) //12/08
-          )
-          .attr("stroke", colorMapping(ticker))
-          .style("stroke-width", 2)
-          .style("fill", "none");
+          );
 
-        // if (transition) line.transition().duration(500);
-        lines.push(line);
-
+        //-- update the circle in the end of the graph line
         const selectedData = dataByTicker.get(ticker);
         const lastXValue = xScale(
           xValue(selectedData[selectedData.length - 1])
@@ -787,18 +781,8 @@ function buildChartPane(pTickers = selectedTickers) {
         const lastYValue = yScale(
           yValue(selectedData[selectedData.length - 1])
         );
-        const circle = svg
-          .append("g")
-          .attr("transform", `translate(${margin.left}, ${margin.top})`)
-          .append("circle");
-        circle
-          .attr("cx", lastXValue)
-          .attr("cy", lastYValue)
-          .attr("r", 5)
-          .attr("stroke", "#fff")
-          .style("stroke-width", 1)
-          .style("fill", colorMapping(ticker));
-        circles.push(circle);
+        const circle = circles[i];
+        circle.attr("cx", lastXValue).attr("cy", lastYValue);
       });
     };
 
@@ -858,7 +842,7 @@ function buildChartPane(pTickers = selectedTickers) {
   } //hideChart
   function updateRuleInfo(date = xDate) {
     if (!date) return;
-    console.log("updateRuleInfo :: date??", date);
+    // console.log("updateRuleInfo :: date??", date);
 
     var xPos = xScale(date);
     if (xPos > innerWidth || xPos <= 0) {
