@@ -890,7 +890,7 @@ function buildChartPane(pTickers = selectedTickers) {
       const index = bisect(dataArr, timeStamp);
       const yVal =
         totalTickers <= 1
-          ? formatNumber(dataArr[index].price)
+          ? "$" + formatNumber(dataArr[index].price)
           : formatPercent(dataArr[index].percentChange) + "%";
       const yPos =
         totalTickers <= 1
@@ -898,7 +898,7 @@ function buildChartPane(pTickers = selectedTickers) {
           : yScale(dataArr[index].percentChange) + margin.top;
       d3.selectAll(`.mouse-per-line.${ticker} text`)
         .attr("y", yPos + 3)
-        .text(`$${yVal}`);
+        .text(`${yVal}`);
       d3.selectAll(`.mouse-per-line.${ticker} rect`).attr("y", yPos - 10);
       d3.selectAll(`.mouse-per-line.${ticker} circle`).attr("cy", yPos);
     });
