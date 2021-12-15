@@ -228,7 +228,7 @@ h1 {
   /* text-align: center; */
 }
 
-.mouse-per-line text {
+.mouse-over-effects .mouse-per-line text {
   font-family: "News Cycle", Sans-serif;
   font-size: 12px;
   font-weight: var(--regular);
