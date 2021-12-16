@@ -210,7 +210,7 @@ h1 {
   stroke: var(--hline-color);
   shape-rendering: crispEdges;
 }
-.thickHLine {
+.thickHline {
   stroke: var(--origin-color);
   stroke-width: 2px;
   shape-rendering: crispEdges;

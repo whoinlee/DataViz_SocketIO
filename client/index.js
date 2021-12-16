@@ -186,7 +186,7 @@ function buildChartPane(pTickers = selectedTickers) {
     </div>`
       )
       .join("");
-  }
+  } //buildInfo
   function updateInfo(pTickers = selectedTickers) {
     // console.log("buildChartPane, updateInfo, pTickers? ", pTickers);
     if (pTickers.length == 0 || !pTickers) return;
@@ -218,18 +218,18 @@ function buildChartPane(pTickers = selectedTickers) {
       )}<span>%</span>`;
       infoHolder.querySelector(".value").textContent =
         sign + "$" + formatNumber(Math.abs(priceChange));
-    });
-  }
+    }); //pTickers
+  } //updateInfo
   function showInfo() {
     // console.log("buildChartPane, showInfo");
     // indicationHolder.style.visibility = "visible";
     indicationHolder.classList.remove("hide");
-  }
+  } //showInfo
   function hideInfo() {
     // console.log("buildChartPane, hideInfo");
     // indicationHolder.style.visibility = "hidden";
     indicationHolder.classList.add("hide");
-  }
+  } //hideInfo
 
   let svg, lines, circles, rule, ruleLabel;
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
@@ -271,98 +271,122 @@ function buildChartPane(pTickers = selectedTickers) {
         updateRuleInfo(xDate);
       });
 
-    function buildPriceChart() {
-      console.log("buildPriceChart, pTickers ?? ", pTickers);
+    let dataByTicker = d3.group(stockData, (d) => d.ticker);
 
-      let dataByTicker = d3.group(stockData, (d) => d.ticker);
-      let selectedTicker = pTickers[0];
-      let selectedData = dataByTicker.get(selectedTicker);
-      let selectedColor = colorMapping(selectedTicker);
+    //-- priceChart or changeChart, depending on the number of selection
+    const chartType = pTickers.length <= 1 ? "price" : "change";
+    console.log("buildChart, chartType ?? ", chartType);
 
-      xValue = (d) => d["timestamp"];
+    let domainData;
+    xValue = (d) => d["timestamp"];
+    if (chartType == "price") {
       yValue = (d) => d["price"];
+      domainData = dataByTicker.get(pTickers[0]);
+    } else {
+      yValue = (d) => d["percentChange"];
+      domainData = stockData;
+    }
 
-      //-- set ranges
-      xScale = d3
-        .scaleUtc()
-        .domain(d3.extent(selectedData, xValue))
-        .range([0, innerWidth]);
-      yScale = d3
-        .scaleLinear()
-        .domain(d3.extent(selectedData, yValue))
-        .range([innerHeight, 0]);
+    //-- set ranges
+    xScale = d3
+      .scaleUtc()
+      .domain(d3.extent(domainData, xValue))
+      .range([0, innerWidth]);
+    yScale = d3
+      .scaleLinear()
+      .domain(d3.extent(domainData, yValue))
+      .range([innerHeight, 0]);
 
-      //-- set grids :: vertical xGrid and horizontal yGrid
-      xGrid = (g) =>
-        g
-          .attr("class", "vline")
-          .selectAll("line")
-          .data(xScale.ticks(10))
-          .join("line")
-          .attr("x1", (d) => xScale(d))
-          .attr("x2", (d) => xScale(d))
-          .attr("y1", 0 + margin.top - 8) /* 8px extra long */
-          .attr("y2", height - margin.bottom + 8); /* 8px extra long */
-      yGrid = (g) =>
-        g
-          .attr("class", "hline")
-          .selectAll("line")
-          .data(yScale.ticks(5))
-          .join("line")
-          .attr("x1", 0)
-          .attr("x2", innerWidth + 75) /* 75px extra wide */
-          .attr("y1", (d) => yScale(d))
-          .attr("y2", (d) => yScale(d));
+    //-- set grids :: vertical xGrid and horizontal yGrid
+    xGrid = (g) =>
+      g
+        .attr("class", "vline")
+        .selectAll("line")
+        .data(xScale.ticks(10))
+        .join("line")
+        .attr("x1", (d) => xScale(d))
+        .attr("x2", (d) => xScale(d))
+        .attr("y1", 0 + margin.top - 8) /* 8px extra long */
+        .attr("y2", height - margin.bottom + 8); /* 8px extra long */
+    yGrid = (g) =>
+      g
+        .attr("class", "hline")
+        .selectAll("line")
+        .data(yScale.ticks(5))
+        .attr("class", (d) => {
+          if (d == 0) return "thickHLine";
+        })
+        .join("line")
+        .attr("x1", 0)
+        .attr("x2", innerWidth + 75) /* 75px extra wide */
+        .attr("y1", (d) => yScale(d))
+        .attr("y2", (d) => yScale(d));
 
-      xGridG = svg
-        .append("g")
-        .attr("transform", `translate(${margin.left}, 0)`)
-        .call(xGrid);
-      yGridG = svg
-        .append("g")
-        .attr("transform", `translate(0, ${margin.top})`)
-        .call(yGrid);
+    xGridG = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(xGrid);
+    yGridG = svg
+      .append("g")
+      .attr("transform", `translate(0, ${margin.top})`)
+      .call(yGrid);
 
-      //-- add X axis
-      xAxisB = svg
-        .append("g")
-        .attr("id", "xAxisB")
-        .attr("class", "xAxis")
-        .attr(
-          "transform",
-          `translate(${margin.left}, ${height - margin.bottom + 8})`
-        );
-      xAxisB
-        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      xAxisT = svg
-        .append("g")
-        .attr("id", "xAxisT")
-        .attr("class", "xAxis")
-        .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
-      xAxisT
-        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
+    //-- add X axis
+    xAxisB = svg
+      .append("g")
+      .attr("id", "xAxisB")
+      .attr("class", "xAxis")
+      .attr(
+        "transform",
+        `translate(${margin.left}, ${height - margin.bottom + 8})`
+      );
+    xAxisB
+      .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+      .call((g) => g.select(".domain").remove());
+    xAxisT = svg
+      .append("g")
+      .attr("id", "xAxisT")
+      .attr("class", "xAxis")
+      .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
+    xAxisT
+      .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+      .call((g) => g.select(".domain").remove());
 
-      //-- add Y axis
-      yAxis = svg
-        .append("g")
-        .attr("id", "yAxisR")
-        .attr("class", "yAxis")
-        .attr(
-          "transform",
-          `translate(${margin.left + innerWidth - 5}, ${margin.top - 9})`
-        );
-      yAxis
-        .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
-        .call((g) => g.select(".domain").remove());
+    //-- add Y axis
+    yAxis = svg
+      .append("g")
+      .attr("id", "yAxisR")
+      .attr("class", "yAxis")
+      .attr(
+        "transform",
+        `translate(${margin.left + innerWidth - 5}, ${margin.top - 9})`
+      );
+    yAxis
+      .call(
+        d3
+          .axisRight(yScale)
+          .ticks(5)
+          .tickFormat((d) => {
+            if (chartType == "price") {
+              return formatNumber(d);
+            } else {
+              return formatPercent(d) + "%";
+            }
+          })
+      )
+      .call((g) => g.select(".domain").remove());
 
-      //-- draw a price line
-      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
-      lines = [];
+    //-- draw graph line(s)
+    if (lines && lines.length > 0) lines.forEach((line) => line.remove());
+    if (circles && circles.length > 0)
+      circles.forEach((circle) => circle.remove());
+    lines = [];
+    circles = [];
+    pTickers.forEach((ticker) => {
+      const selectedData = dataByTicker.get(ticker);
       const line = svg
         .append("g")
-        .attr("id", "priceGraph")
+        .attr("id", `graph${ticker}`)
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("path")
         .datum(selectedData)
@@ -372,23 +396,26 @@ function buildChartPane(pTickers = selectedTickers) {
             .line()
             .curve(curve)
             .x((d) => xScale(d.timestamp))
-            .y((d) => yScale(d.price))
+            .y((d) => {
+              if (chartType == "price") {
+                return yScale(d.price);
+              } else {
+                return yScale(d.percentChange);
+              }
+            })
         )
         .attr("class", "line")
-        .attr("stroke", selectedColor)
+        .attr("stroke", colorMapping(ticker))
         .style("stroke-width", 2)
         .style("fill", "none");
-      lines = [line];
+      lines.push(line);
 
-      //-- build a circle in the end of price line
-      if (circles && circles.length > 0)
-        circles.forEach((circle) => circle.remove());
-      circles = [];
+      //-- draw circles
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
       const circle = svg
         .append("g")
-        .attr("id", "dotTip")
+        .attr("id", `dotTip${ticker}`)
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .append("circle");
       circle
@@ -397,44 +424,46 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("r", 5)
         .attr("stroke", "#fff")
         .style("stroke-width", 1)
-        .style("fill", selectedColor);
-      circles = [circle];
+        .style("fill", colorMapping(ticker));
+      circles.push(circle);
+    });
 
-      //-- build a vertical line for inspection
-      rule = svg.append("g").attr("class", "mouse-over-effects");
-      rule
-        .append("line")
-        .attr("id", "rule")
-        .attr("class", "mouse-line")
-        .attr("x1", margin.left)
-        .attr("x2", margin.left)
-        .attr("y1", margin.top)
-        .attr("y2", height - margin.bottom + 8)
-        .attr("stroke", "#000")
-        .style("z-index", "10")
-        .style("stroke-width", "1")
-        .style("opacity", "0");
+    //-- draw a vertical line (rule) for inspection
+    rule = svg.append("g").attr("class", "mouse-over-effects");
+    rule
+      .append("line")
+      .attr("id", "rule")
+      .attr("class", "mouse-line")
+      .attr("x1", margin.left)
+      .attr("x2", margin.left)
+      .attr("y1", margin.top)
+      .attr("y2", height - margin.bottom + 8)
+      .attr("stroke", "#000")
+      .style("z-index", "10")
+      .style("stroke-width", "1")
+      .style("opacity", "0");
 
-      //-- for showing time
-      ruleLabel = rule
-        .append("text")
-        .attr("id", "ruleLabel")
-        .attr("class", "label")
-        .attr("x", 6)
-        .attr("y", margin.top - 2)
-        .attr("fill", "#000")
-        .attr("text-anchor", "right")
-        .style("opacity", "0");
+    //-- for showing time inspected
+    ruleLabel = rule
+      .append("text")
+      .attr("id", "ruleLabel")
+      .attr("class", "label")
+      .attr("x", 6)
+      .attr("y", margin.top - 2)
+      .attr("fill", "#000")
+      .attr("text-anchor", "right")
+      .style("opacity", "0");
 
+    pTickers.forEach((ticker) => {
       var mousePerLine = rule
         .append("g")
-        .attr("class", `mouse-per-line ${selectedTicker}`);
+        .attr("class", `mouse-per-line ${ticker}`);
       mousePerLine
         .append("circle")
         .attr("cx", margin.left)
         .attr("cy", margin.top + 3)
         .attr("r", 3)
-        .style("fill", selectedColor)
+        .style("fill", colorMapping(ticker))
         .style("opacity", "0");
       mousePerLine
         .append("rect")
@@ -444,263 +473,75 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("y", 0)
         .attr("width", 48)
         .attr("height", 18)
-        .style("fill", selectedColor)
+        .style("fill", colorMapping(ticker))
         .style("opacity", "0");
       mousePerLine
         .append("text")
-        .attr("x", 30)
+        .attr("x", 32)
         .attr("y", 0)
         .style("fill", "#fff")
         .text("");
-    } //buildPriceChart
-
-    function buildChangeChart() {
-      console.log("buildChangeChart, pTickers ?? ", pTickers);
-
-      let dataByTicker = d3.group(stockData, (d) => d.ticker);
-
-      xValue = (d) => d["timestamp"];
-      yValue = (d) => d["percentChange"];
-      // zValue = (d) => d["ticker"];
-
-      //-- set ranges
-      xScale = d3
-        .scaleUtc()
-        .domain(d3.extent(stockData, xValue))
-        .range([0, innerWidth]);
-      yScale = d3
-        .scaleLinear()
-        .domain(d3.extent(stockData, yValue))
-        .range([innerHeight, 0]);
-
-      //-- set grids :: vertical xGrid and horizontal yGrid
-      xGrid = (g) =>
-        g
-          .selectAll("line")
-          .attr("class", "vline")
-          .data(xScale.ticks(10))
-          .join("line")
-          .attr("x1", (d) => xScale(d))
-          .attr("x2", (d) => xScale(d))
-          .attr("y1", 0 + margin.top - 8) /* 8px extra long to the top */
-          .attr(
-            "y2",
-            height - margin.bottom + 8
-          ); /* 8px extra long to the bottom */
-      yGrid = (g) =>
-        g
-          .attr("class", "hline")
-          .selectAll("line")
-          .data(yScale.ticks(5))
-          .attr("class", (d) => {
-            if (d == 0) return "thickHLine";
-          })
-          .join("line")
-          .attr("x1", 0)
-          .attr("x2", innerWidth + 75) /* 75px extra wide to the right */
-          .attr("y1", (d) => yScale(d))
-          .attr("y2", (d) => yScale(d));
-
-      xGridG = svg
-        .append("g")
-        .attr("transform", `translate(${margin.left}, 0)`)
-        .call(xGrid);
-      yGridG = svg
-        .append("g")
-        .attr("transform", `translate(0, ${margin.top})`)
-        .call(yGrid);
-
-      //-- add X axis
-      xAxisB = svg
-        .append("g")
-        .attr("id", "xAxisB")
-        .attr("class", "xAxis")
-        .attr(
-          "transform",
-          `translate(${margin.left}, ${height - margin.bottom + 8})`
-        );
-      xAxisB
-        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      xAxisT = svg
-        .append("g")
-        .attr("id", "xAxisT")
-        .attr("class", "xAxis")
-        .attr("transform", `translate(${margin.left}, ${margin.top - 8})`);
-      xAxisT
-        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-
-      //-- add Y axis
-      yAxis = svg
-        .append("g")
-        .attr("id", "yAxisR")
-        .attr("class", "yAxis")
-        .attr(
-          "transform",
-          `translate(${margin.left + innerWidth - 5}, ${margin.top - 9})`
-        );
-      yAxis
-        .call(
-          d3
-            .axisRight(yScale)
-            .ticks(5)
-            .tickFormat((d) => d3.format("+.1f")(d) + "%")
-        )
-        .call((g) => g.select(".domain").remove());
-
-      //-- draw lines and circles in the end of lines
-      if (lines && lines.length > 0) lines.forEach((line) => line.remove());
-      if (circles && circles.length > 0)
-        circles.forEach((circle) => circle.remove());
-      lines = [];
-      circles = [];
-      //-- draw graph lines
-      pTickers.forEach((ticker) => {
-        const line = svg
-          .append("g")
-          .attr("id", `changeGraph${ticker}`)
-          .attr("transform", `translate(${margin.left}, ${margin.top})`)
-          .append("path")
-          .datum(dataByTicker.get(ticker))
-          .attr(
-            "d",
-            d3
-              .line()
-              .curve(curve)
-              .x((d) => xScale(d.timestamp))
-              .y((d) => yScale(d.percentChange))
-          )
-          .attr("class", "line")
-          .attr("stroke", colorMapping(ticker))
-          .style("stroke-width", 2)
-          .style("fill", "none");
-        lines.push(line);
-
-        //-- draw circles
-        const selectedData = dataByTicker.get(ticker);
-        const lastXValue = xScale(
-          xValue(selectedData[selectedData.length - 1])
-        );
-        const lastYValue = yScale(
-          yValue(selectedData[selectedData.length - 1])
-        );
-        const circle = svg
-          .append("g")
-          .attr("id", `dotTip${ticker}`)
-          .attr("transform", `translate(${margin.left}, ${margin.top})`)
-          .append("circle");
-        circle
-          .attr("cx", lastXValue)
-          .attr("cy", lastYValue)
-          .attr("r", 5)
-          .attr("stroke", "#fff")
-          .style("stroke-width", 1)
-          .style("fill", colorMapping(ticker));
-        circles.push(circle);
-      }); //pTickers.forEach
-
-      //-- draw a vertical line
-      rule = svg.append("g").attr("class", "mouse-over-effects");
-      rule
-        .append("line")
-        .attr("id", "rule")
-        .attr("class", "mouse-line")
-        .attr("x1", margin.left)
-        .attr("x2", margin.left)
-        .attr("y1", margin.top)
-        .attr("y2", height - margin.bottom + 8)
-        .attr("stroke", "#000")
-        .style("z-index", "10")
-        .style("stroke-width", "1")
-        .style("opacity", "1");
-
-      ruleLabel = rule
-        .append("text")
-        .attr("id", "ruleLabel")
-        .attr("class", "label")
-        .attr("x", 6)
-        .attr("y", margin.top - 2)
-        .attr("fill", "#000")
-        .attr("text-anchor", "right");
-
-      pTickers.forEach((ticker) => {
-        var mousePerLine = rule
-          .append("g")
-          .attr("class", `mouse-per-line ${ticker}`);
-        mousePerLine
-          .append("circle")
-          .attr("cx", margin.left)
-          .attr("cy", margin.top + 3)
-          .attr("r", 3)
-          .style("fill", colorMapping(ticker))
-          .style("opacity", "1");
-        mousePerLine
-          .append("rect")
-          .attr("rx", 4)
-          .attr("ry", 4)
-          .attr("x", 26)
-          .attr("y", 0)
-          .attr("width", 48)
-          .attr("height", 18)
-          .style("fill", colorMapping(ticker))
-          .style("opacity", "0");
-        mousePerLine
-          .append("text")
-          .attr("x", 32)
-          .attr("y", 0)
-          .style("fill", "#fff")
-          .text("");
-      }); //pTickers
-    } //buildChangeChart
-
-    if (pTickers.length == 1) {
-      buildPriceChart();
-    } else {
-      buildChangeChart();
-    }
+    }); //pTickers
   } //buildChart
-  function updateChart(pTickers = selectedTickers, transition = true) {
+  function updateChart(pTickers = selectedTickers) {
     // console.log("updateChart");
 
-    const updatePriceChart = () => {
-      // console.log("updateChart, updatePriceChart");
+    //-- priceChart or changeChart, depending on the number of selection
+    const chartType = pTickers.length <= 1 ? "price" : "change";
+    console.log("updateChart, chartType ?? ", chartType);
 
-      if (!pTickers[0]) return;
+    let domainData;
+    let dataByTicker = d3.group(stockData, (d) => d.ticker);
+    xValue = (d) => d["timestamp"];
+    if (chartType == "price") {
+      yValue = (d) => d["price"];
+      domainData = dataByTicker.get(pTickers[0]);
+    } else {
+      yValue = (d) => d["percentChange"];
+      domainData = stockData;
+    }
 
-      let dataByTicker = d3.group(stockData, (d) => d.ticker);
-      let selectedTicker = pTickers[0];
-      let selectedColor = colorMapping(selectedTicker);
-      let selectedData = dataByTicker.get(selectedTicker);
+    //-- update scales
+    xScale = d3
+      .scaleUtc()
+      .domain(d3.extent(domainData, xValue))
+      .range([0, innerWidth]);
+    yScale = d3
+      .scaleLinear()
+      .domain(d3.extent(domainData, yValue))
+      .range([innerHeight, 0]);
 
-      //-- update scales
-      xScale = d3
-        .scaleUtc()
-        .domain(d3.extent(selectedData, xValue))
-        .range([0, innerWidth]);
-      yScale = d3
-        .scaleLinear()
-        .domain(d3.extent(selectedData, yValue))
-        .range([innerHeight, 0]);
+    //-- update grids
+    xGridG.call(xGrid);
+    yGridG.call(yGrid);
 
-      //-- update grids
-      xGridG.call(xGrid);
-      yGridG.call(yGrid);
+    //-- update ticks
+    xAxisB
+      .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
+      .call((g) => g.select(".domain").remove());
+    xAxisT
+      .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
+      .call((g) => g.select(".domain").remove());
+    yAxis
+      .call(
+        d3
+          .axisRight(yScale)
+          .ticks(5)
+          .tickFormat((d) => {
+            if (chartType == "price") {
+              return formatNumber(d);
+            } else {
+              return formatPercent(d) + "%";
+            }
+          })
+      )
+      .call((g) => g.select(".domain").remove());
 
-      //-- update ticks
-      xAxisB
-        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      xAxisT
-        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      yAxis
-        .call(d3.axisRight(yScale).ticks(5).tickFormat(formatNumber))
-        .call((g) => g.select(".domain").remove());
-
-      //-- update graph line
-      lines[0]
-        .datum(selectedData)
+    //-- update graph line(s)
+    // const dataByTicker = d3.group(stockData, (d) => d.ticker);
+    pTickers.forEach((ticker, i) => {
+      lines[i]
+        .datum(dataByTicker.get(ticker))
         // .transition()
         // .duration(500)
         .attr(
@@ -708,94 +549,25 @@ function buildChartPane(pTickers = selectedTickers) {
           d3
             .line()
             .x((d) => xScale(d.timestamp))
-            .y((d) => yScale(d.price))
+            .y((d) => {
+              if (chartType == "price") {
+                return yScale(d.price);
+              } else {
+                return yScale(d.percentChange);
+              }
+            })
         )
-        .attr("stroke", selectedColor);
+        .attr("stroke", colorMapping(ticker));
 
       //-- update the circle in the end of the graph line
+      const selectedData = dataByTicker.get(ticker);
       const lastXValue = xScale(xValue(selectedData[selectedData.length - 1]));
       const lastYValue = yScale(yValue(selectedData[selectedData.length - 1]));
-      circles[0]
+      circles[i]
         .attr("cx", lastXValue)
         .attr("cy", lastYValue)
-        .style("fill", selectedColor);
-    };
-
-    const updateChangeChart = () => {
-      // console.log("updateChart, updateChangeChart, pTickers?", pTickers);
-      // console.log(
-      //   "updateChart, updateChangeChart, selectedTickers?",
-      //   selectedTickers
-      // );
-
-      //-- update scales
-      xScale = d3
-        .scaleUtc()
-        .domain(d3.extent(stockData, xValue))
-        .range([0, innerWidth]);
-      yScale = d3
-        .scaleLinear()
-        .domain(d3.extent(stockData, yValue))
-        .range([innerHeight, 0]);
-
-      //-- update grids
-      xGridG.call(xGrid);
-      yGridG.call(yGrid);
-
-      //-- update ticks
-      xAxisB
-        .call(d3.axisBottom(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      xAxisT
-        .call(d3.axisTop(xScale).ticks(10).tickFormat(formatTime))
-        .call((g) => g.select(".domain").remove());
-      yAxis
-        .call(
-          d3
-            .axisRight(yScale)
-            .ticks(5)
-            .tickFormat((d) => d3.format("+.1f")(d) + "%")
-        )
-        .call((g) => g.select(".domain").remove());
-
-      //-- update graph line
-      const dataByTicker = d3.group(stockData, (d) => d.ticker);
-      // console.log("dataByTicker????", dataByTicker);
-      selectedTickers.forEach((ticker, i) => {
-        lines[i]
-          .datum(dataByTicker.get(ticker))
-          // .transition()
-          // .duration(500)
-          .attr(
-            "d",
-            d3
-              .line()
-              .x((d) => xScale(d.timestamp))
-              .y((d) => yScale(d.percentChange))
-          )
-          .attr("stroke", colorMapping(ticker));
-
-        //-- update the circle in the end of the graph line
-        const selectedData = dataByTicker.get(ticker);
-        const lastXValue = xScale(
-          xValue(selectedData[selectedData.length - 1])
-        );
-        const lastYValue = yScale(
-          yValue(selectedData[selectedData.length - 1])
-        );
-        circles[i]
-          .attr("cx", lastXValue)
-          .attr("cy", lastYValue)
-          .style("fill", colorMapping(ticker));
-      });
-    };
-
-    //TODO:: need??
-    if (pTickers.length == 1) {
-      updatePriceChart();
-    } else {
-      updateChangeChart();
-    }
+        .style("fill", colorMapping(ticker));
+    }); //pTickers
   } //updateChart
   function showChart() {
     // console.log("buildChartPane, showChart, lines?", lines);
@@ -809,7 +581,8 @@ function buildChartPane(pTickers = selectedTickers) {
       circles.forEach((circle) => circle.attr("visibility", "visible"));
 
     //-- vertical line that shows the infos of lines
-    if (rule) rule.attr("visibility", "visible");
+    // if (rule) rule.attr("visibility", "visible");
+    document.querySelector(".mouse-over-effects").style.visibility = "visible";
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
@@ -826,8 +599,9 @@ function buildChartPane(pTickers = selectedTickers) {
     if (circles && circles.length > 0)
       circles.forEach((circle) => circle.attr("visibility", "hidden"));
 
-    //-- vertical line that shows the infos of lines
-    if (rule) rule.attr("visibility", "hidden");
+    // //-- vertical line that shows the infos of lines
+    // if (rule) rule.attr("visibility", "hidden");
+    document.querySelector(".mouse-over-effects").style.visibility = "hidden";
 
     //-- prices/changes ticks
     const texts = document.getElementById("yAxisR").querySelectorAll("text");
