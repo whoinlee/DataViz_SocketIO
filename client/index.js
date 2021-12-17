@@ -259,13 +259,10 @@ function buildChartPane(pTickers = selectedTickers) {
         updateRuleInfo(xDate);
       });
 
-    let dataByTicker = d3.group(stockData, (d) => d.ticker);
-
-    //-- priceChart or changeChart, depending on the number of selection
-    const chartType = pTickers.length <= 1 ? "price" : "change";
-    // console.log("buildChart, chartType ?? ", chartType);
-
     let domainData;
+    let dataByTicker = d3.group(stockData, (d) => d.ticker);
+    //-- depending on the number of ticker selection
+    const chartType = pTickers.length <= 1 ? "price" : "change";
     xValue = (d) => d["timestamp"];
     if (chartType == "price") {
       yValue = (d) => d["price"];
@@ -476,18 +473,17 @@ function buildChartPane(pTickers = selectedTickers) {
       d3.selectAll("svg").remove();
     }
   } //destroyChart
-  function updateChart(pTickers = selectedTickers) {
-    // console.log("updateChart");
-
-    //-- priceChart or changeChart, depending on the number of selection
-    const chartType = pTickers.length <= 1 ? "price" : "change";
+  function updateChart() {
+    if (selectedTickers.length == 0) return;
 
     let domainData;
     let dataByTicker = d3.group(stockData, (d) => d.ticker);
+    //-- depending on the number of ticker selection
+    const chartType = selectedTickers.length <= 1 ? "price" : "change";
     xValue = (d) => d["timestamp"];
     if (chartType == "price") {
       yValue = (d) => d["price"];
-      domainData = dataByTicker.get(pTickers[0]);
+      domainData = dataByTicker.get(selectedTickers[0]);
     } else {
       yValue = (d) => d["percentChange"];
       domainData = stockData;
@@ -530,7 +526,7 @@ function buildChartPane(pTickers = selectedTickers) {
       .call((g) => g.select(".domain").remove());
 
     //-- update graph line(s)
-    pTickers.forEach((ticker, i) => {
+    selectedTickers.forEach((ticker, i) => {
       lines[i]
         .datum(dataByTicker.get(ticker))
         // .transition()
@@ -558,10 +554,10 @@ function buildChartPane(pTickers = selectedTickers) {
         .attr("cx", lastXValue)
         .attr("cy", lastYValue)
         .style("fill", colorMapping(ticker));
-    }); //pTickers
+    }); //selectedTickers
   } //updateChart
   function updateRuleInfo(date = xDate) {
-    if (!date) return;
+    if (!date || !svg) return;
 
     var xPos = xScale(date);
     if (xPos > innerWidth || xPos <= 0) {
@@ -620,6 +616,7 @@ function buildChartPane(pTickers = selectedTickers) {
 
 //-- update on "market events"
 function updateChartPane() {
+  // console.log("updateChartPane");
   if (stockChart) stockChart.update();
 } //updateCharPane
 
@@ -635,5 +632,6 @@ function redrawChartPane(pTickers = selectedTickers) {
 
 //-- hide on no ticker selected
 function hideChartPane() {
+  // console.log("hideChartPane");
   stockChart.hide();
 } //hideChartPane;
