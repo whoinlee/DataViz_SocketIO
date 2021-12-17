@@ -29,9 +29,12 @@ const upColor = "#2ca02c"; //-- green
 const downColor = "#d62728"; //-- red
 
 //-- data
-let stockData; //-- data w. additional columns of priceChange and percentChange
-let stockChart; //-- a chartPane Object
-let selectedTickers = []; //-- current ticker selections
+let stockData; //data w. additional columns of priceChange and percentChange
+let stockChart; // a chartPane Object
+let selectedTickers = []; //current ticker selections
+
+//-- temporary
+// let isNewDay = false; //for testing
 
 //-- load historical data
 const col = (d) => {
@@ -68,7 +71,11 @@ csv("/market-history", col, (error, data) => {
 //-- subscribe to updates
 const socket = io();
 socket.on("market events", function (data) {
+  // if (isNewDay) {
   //   console.log("\nChange", data);
+  //   isNewDay = false;
+  //   // console.log("data.timestamp?", formatTime(data.timestamp));  //09:31
+  // }
 
   const timestamp = data.timestamp + "";
 
@@ -95,8 +102,10 @@ socket.on("market events", function (data) {
 });
 socket.on("start new day", function (data) {
   // console.log("\nNewDay", data);
+  // // console.log("formatTime(data.timestamp)", formatTime(data.timestamp)); //9:30
+  // isNewDay = true; //for testing
 
-  //-- reset data w. the last data
+  //-- reset data and save the lastDayData
   const removeCount = stockData.length - 4;
   stockData.splice(0, removeCount);
   stockData.forEach((item) => {
@@ -226,13 +235,16 @@ function buildChartPane(pTickers = selectedTickers) {
   let xScale, yScale, xValue, yValue; //TODO: zScale, zValue
   let xGrid, yGrid, xGridG, yGridG, xAxisB, xAxisT, yAxis;
   let xDate;
+  xValue = (d) => d["timestamp"];
   buildChart(pTickers);
 
   function buildChart(pTickers = selectedTickers) {
-    // console.log("buildChart, pTickers ?? ", pTickers);
+    console.log("buildChart, pTickers ?? ", pTickers);
 
-    if (svg) d3.selectAll("svg").remove();
-
+    if (svg) {
+      console.log("deleting previous svg and rebuilding ==============> ");
+      d3.selectAll("svg").remove();
+    }
     svg = d3
       .select("#chartHolder")
       .append("svg")
@@ -263,7 +275,7 @@ function buildChartPane(pTickers = selectedTickers) {
 
     //-- priceChart or changeChart, depending on the number of selection
     const chartType = pTickers.length <= 1 ? "price" : "change";
-    // console.log("buildChart, chartType ?? ", chartType);
+    console.log("buildChart, chartType ?? ", chartType);
 
     let domainData;
     xValue = (d) => d["timestamp"];
@@ -302,7 +314,7 @@ function buildChartPane(pTickers = selectedTickers) {
         .selectAll("line")
         .data(yScale.ticks(5))
         .attr("class", (d) => {
-          if (d == 0) return "thickHline";
+          if (d == 0) return "thickHLine";
         })
         .join("line")
         .attr("x1", 0)
@@ -473,14 +485,16 @@ function buildChartPane(pTickers = selectedTickers) {
   } //buildChart
   function destroyChart() {
     if (svg) {
+      console.log("deleting previous svg and rebuilding ==============> ");
       d3.selectAll("svg").remove();
     }
-  } //destroyChart
+  }
   function updateChart(pTickers = selectedTickers) {
     // console.log("updateChart");
 
     //-- priceChart or changeChart, depending on the number of selection
     const chartType = pTickers.length <= 1 ? "price" : "change";
+    console.log("updateChart, chartType ?? ", chartType);
 
     let domainData;
     let dataByTicker = d3.group(stockData, (d) => d.ticker);
@@ -530,6 +544,7 @@ function buildChartPane(pTickers = selectedTickers) {
       .call((g) => g.select(".domain").remove());
 
     //-- update graph line(s)
+    // const dataByTicker = d3.group(stockData, (d) => d.ticker);
     pTickers.forEach((ticker, i) => {
       lines[i]
         .datum(dataByTicker.get(ticker))
@@ -560,8 +575,45 @@ function buildChartPane(pTickers = selectedTickers) {
         .style("fill", colorMapping(ticker));
     }); //pTickers
   } //updateChart
+  function showChart() {
+    // console.log("buildChartPane, showChart, lines?", lines);
+
+    //-- price/change lines
+    if (lines && lines.length > 0)
+      lines.forEach((line) => line.attr("visibility", "visible"));
+
+    //-- circles in the end of lines
+    if (circles && circles.length > 0)
+      circles.forEach((circle) => circle.attr("visibility", "visible"));
+
+    //-- vertical line that shows the infos of lines
+    // if (rule) rule.attr("visibility", "visible");
+    document.querySelector(".mouse-over-effects").style.visibility = "visible";
+
+    //-- prices/changes ticks
+    const texts = document.getElementById("yAxisR").querySelectorAll("text");
+    texts.forEach((text) => (text.style.visibility = "visible"));
+  } //showChart
+  function hideChart() {
+    // console.log("buildChartPane, hideChart, lines?", lines);
+
+    //-- price/change lines
+    if (lines && lines.length > 0)
+      lines.forEach((line) => line.attr("visibility", "hidden"));
+    //-- circles in the end of lines
+    if (circles && circles.length > 0)
+      circles.forEach((circle) => circle.attr("visibility", "hidden"));
+
+    // //-- vertical line that shows the infos of lines
+    document.querySelector(".mouse-over-effects").style.visibility = "hidden";
+
+    //-- prices/changes ticks
+    const texts = document.getElementById("yAxisR").querySelectorAll("text");
+    texts.forEach((text) => (text.style.visibility = "hidden"));
+  } //hideChart
   function updateRuleInfo(date = xDate) {
     if (!date) return;
+    // console.log("updateRuleInfo :: date??", date);
 
     var xPos = xScale(date);
     if (xPos > innerWidth || xPos <= 0) {
@@ -572,6 +624,10 @@ function buildChartPane(pTickers = selectedTickers) {
     rule.style("visibility", "visible");
     rule.attr("transform", `translate(${xPos},0)`);
     ruleLabel.text(formatTime(date));
+
+    //-- temporarily, for testing
+    // d3.selectAll(".mouse-per-line text").style("opacity", "0");
+    // d3.selectAll(".mouse-per-line circle").style("opacity", "0");
 
     const timeStamp = date.getTime();
     const tickers = selectedTickers;
@@ -626,6 +682,7 @@ function updateChartPane() {
 //-- redraw on ticker(checkbox) selection change
 function redrawChartPane(pTickers = selectedTickers) {
   // console.log("redrawChartPane :: pTickers, ", pTickers);
+
   if (!stockChart) {
     stockChart = buildChartPane(pTickers);
   } else {
